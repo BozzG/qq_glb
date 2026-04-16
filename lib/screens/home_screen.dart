@@ -5,13 +5,13 @@ import 'package:intl/intl.dart';
 import '../models/models.dart';
 import '../providers/schedule_provider.dart';
 import 'schedule_detail_screen.dart';
-import 'add_schedule_screen.dart';
 import 'check_in_stats_screen.dart';
 import 'course_list_screen.dart';
 import 'medical_records_screen.dart';
 import 'memo_screen.dart';
 import 'growth_log_screen.dart';
 import 'settings_screen.dart';
+import 'today_overview_screen.dart';
 import '../utils/app_theme.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -301,13 +301,13 @@ class _HomeScreenState extends State<HomeScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       _QuickEntry(
-                        icon: Icons.add_circle_outline,
-                        label: '添加日程',
+                        icon: Icons.dashboard_outlined,
+                        label: '今日概览',
                         color: AppColors.primary,
                         onTap: () => Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => AddScheduleScreen(),
+                            builder: (_) => TodayOverviewScreen(),
                           ),
                         ),
                       ),
@@ -457,10 +457,6 @@ class _HomeScreenState extends State<HomeScreen> {
             label: '日志',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.add_circle_outline, size: 0),
-            label: '',
-          ),
-          BottomNavigationBarItem(
             icon: Icon(Icons.analytics_outlined),
             label: '统计',
           ),
@@ -478,16 +474,10 @@ class _HomeScreenState extends State<HomeScreen> {
             case 2:
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => AddScheduleScreen()),
-              );
-              break;
-            case 3:
-              Navigator.push(
-                context,
                 MaterialPageRoute(builder: (_) => CheckInStatsScreen()),
               );
               break;
-            case 4:
+            case 3:
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (_) => MemoScreen()),
@@ -495,17 +485,6 @@ class _HomeScreenState extends State<HomeScreen> {
               break;
           }
         },
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      floatingActionButton: FloatingActionButton(
-        heroTag: 'main_fab',
-        elevation: 6,
-        backgroundColor: AppColors.primary,
-        onPressed: () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => AddScheduleScreen()),
-        ),
-        child: Icon(Icons.add, color: Colors.white, size: 30),
       ),
     );
   }

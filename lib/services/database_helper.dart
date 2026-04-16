@@ -1,7 +1,9 @@
 import 'dart:io';
+import 'dart:convert';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:uuid/uuid.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper _instance = DatabaseHelper._internal();
@@ -36,8 +38,9 @@ class DatabaseHelper {
     }
     return await openDatabase(
       dbPath,
-      version: 1,
+      version: 2,
       onCreate: _onCreate,
+      onUpgrade: _onUpgrade,
     );
   }
   
@@ -57,6 +60,8 @@ class DatabaseHelper {
         isCourse INTEGER DEFAULT 0,
         courseId TEXT,
         memo TEXT,
+        parentId TEXT,
+        repeatTemplateId TEXT,
         createdAt TEXT NOT NULL,
         updatedAt TEXT
       )
@@ -164,6 +169,95 @@ class DatabaseHelper {
     await db.insert('app_settings', {'key': 'reminder_minutes', 'value': '15'});
   }
   
+  /// 数据库版本升级迁移
+  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      // v1 → v2: 添加 parentId 和 repeatTemplateId 列，用于支持重复日程的独立实例模式
+      await db.execute('ALTER TABLE schedules ADD COLUMN parentId TEXT');
+      await db.execute('ALTER TABLE schedules ADD COLUMN repeatTemplateId TEXT');
+      
+      // 将现有的重复日程按规则拆分为独立实例
+      final rows = await db.query('schedules', where: "repeatType != 'none'", orderBy: 'dateTime ASC');
+      for (final row in rows) {
+        final id = row['id'] as String;
+        final repeatTypeStr = row['repeatType'] as String? ?? 'none';
+        final repeatDaysJson = row['repeatDays'] as String? ?? '[]';
+        final repeatDays = (jsonDecode(repeatDaysJson) as List).cast<int>();
+        
+        if (repeatTypeStr == 'none' || (repeatTypeStr == 'custom' && repeatDays.isEmpty)) continue;
+        
+        // 生成模板ID
+        final templateId = const Uuid().v4();
+        
+        // 更新原始日程为组长
+        await db.update(
+          'schedules',
+          {'repeatTemplateId': templateId},
+          where: 'id = ?',
+          whereArgs: [id],
+        );
+        
+        final baseDateTime = DateTime.parse(row['dateTime'] as String);
+        final now = DateTime.now();
+        
+        // 生成当前月+下一个月的独立日程实例（从原始日期到下月末）
+        final endMonth = now.month == 12 ? 1 : now.month + 1;
+        final endYear = now.month == 12 ? now.year + 1 : now.year;
+        final endDate = DateTime(endYear, endMonth + 1, 0); // 下个月最后一天
+        
+        List<Map<String, dynamic>> instances = [];
+        DateTime current = DateTime(baseDateTime.year, baseDateTime.month, baseDateTime.day);
+        
+        while (!current.isAfter(endDate)) {
+          // 跳过自身（第一个实例就是原始记录）
+          if (isSameDay(current, baseDateTime)) {
+            current = current.add(Duration(days: 1));
+            continue;
+          }
+          
+          bool shouldCreate = false;
+          if (repeatTypeStr == 'daily') {
+            shouldCreate = true;
+          } else if (repeatTypeStr == 'weekly' || repeatTypeStr == 'custom') {
+            shouldCreate = repeatDays.contains(current.weekday);
+          }
+          
+          if (shouldCreate) {
+            final instanceId = const Uuid().v4();
+            final instanceDateTime = DateTime(
+              current.year, current.month, current.day,
+              baseDateTime.hour, baseDateTime.minute,
+            );
+            instances.add({
+              'id': instanceId,
+              'title': row['title'],
+              'description': row['description'],
+              'location': row['location'],
+              'dateTime': instanceDateTime.toIso8601String(),
+              'endTime': row['endTime'],
+              'repeatType': row['repeatType'],
+              'repeatDays': row['repeatDays'],
+              'scheduleType': row['scheduleType'],
+              'isCourse': row['isCourse'],
+              'courseId': row['courseId'],
+              'memo': row['memo'],
+              'parentId': id,           // 组长是原始日程
+              'repeatTemplateId': templateId,
+              'createdAt': now.toIso8601String(),
+              'updatedAt': now.toIso8601String(),
+            });
+          }
+          
+          current = current.add(Duration(days: 1));
+        }
+        
+        for (final inst in instances) {
+          await db.insert('schedules', inst);
+        }
+      }
+    }
+  }
+  
   // 通用CRUD操作
   Future<int> insert(String table, Map<String, dynamic> data) async {
     final db = await database;
@@ -201,4 +295,8 @@ class DatabaseHelper {
       await txn.insert('app_settings', {'key': 'reminder_minutes', 'value': '15'});
     });
   }
+
+  /// 判断两个DateTime是否是同一天
+  static bool isSameDay(DateTime a, DateTime b) =>
+      a.year == b.year && a.month == b.month && a.day == b.day;
 }

@@ -16,6 +16,9 @@ class Schedule {
   final bool isCourse;
   final String? courseId;
   final String? memo;
+  // 重复日程关联字段
+  final String? parentId;          // 所属重复组ID（组内第一个日程的id，自身为null表示是组长）
+  final String? repeatTemplateId;  // 重复模板ID（同一组的所有实例共享此ID，用于标识"这是同一个重复规则生成的"）
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -32,6 +35,8 @@ class Schedule {
     this.isCourse = false,
     this.courseId,
     this.memo,
+    this.parentId,
+    this.repeatTemplateId,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) : 
@@ -70,6 +75,8 @@ class Schedule {
     'scheduleType': scheduleType.name,
     'isCourse': isCourse ? 1 : 0,
     'courseId': courseId, 'memo': memo,
+    'parentId': parentId,
+    'repeatTemplateId': repeatTemplateId,
     'createdAt': createdAt.toIso8601String(), 'updatedAt': updatedAt.toIso8601String(),
   };
 
@@ -83,16 +90,20 @@ class Schedule {
     scheduleType: ScheduleType.values.firstWhere((e) => e.name == map['scheduleType'], orElse: () => ScheduleType.general),
     isCourse: (map['isCourse'] ?? 0) == 1,
     courseId: map['courseId'], memo: map['memo'],
+    parentId: map['parentId'],
+    repeatTemplateId: map['repeatTemplateId'],
     createdAt: DateTime.parse(map['createdAt']), updatedAt: DateTime.parse(map['updatedAt']),
   );
 
-  Schedule copyWith({String? title, String? description, String? location, DateTime? dateTime, DateTime? endTime, RepeatType? repeatType, List<int>? repeatDays, ScheduleType? scheduleType, bool? isCourse, String? courseId, String? memo}) => Schedule(
+  Schedule copyWith({String? title, String? description, String? location, DateTime? dateTime, DateTime? endTime, RepeatType? repeatType, List<int>? repeatDays, ScheduleType? scheduleType, bool? isCourse, String? courseId, String? memo, String? parentId, String? repeatTemplateId}) => Schedule(
     id: id, title: title ?? this.title, description: description ?? this.description,
     location: location ?? this.location, dateTime: dateTime ?? this.dateTime,
     endTime: endTime ?? this.endTime, repeatType: repeatType ?? this.repeatType,
     repeatDays: repeatDays ?? this.repeatDays, scheduleType: scheduleType ?? this.scheduleType,
     isCourse: isCourse ?? this.isCourse, courseId: courseId ?? this.courseId,
-    memo: memo ?? this.memo, createdAt: createdAt, updatedAt: updatedAt,
+    memo: memo ?? this.memo, parentId: parentId ?? this.parentId,
+    repeatTemplateId: repeatTemplateId ?? this.repeatTemplateId,
+    createdAt: createdAt, updatedAt: updatedAt,
   );
 }
 
