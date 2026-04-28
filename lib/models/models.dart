@@ -191,27 +191,6 @@ class CourseConsumption {
 
 enum ConsumptionType { auto, manual }
 
-// ===== Memo 备忘录 =====
-class Memo {
-  final String id;
-  final String? title;
-  final String content;
-  final DateTime? reminderTime;
-  final bool isCompleted;
-  final DateTime createdAt;
-  final DateTime updatedAt;
-
-  Memo({required this.id, this.title, required this.content, this.reminderTime, this.isCompleted = false, DateTime? createdAt, DateTime? updatedAt})
-    : createdAt = createdAt ?? DateTime.now(), updatedAt = updatedAt ?? DateTime.now();
-
-  Map<String, dynamic> toMap() => {'id': id, 'title': title, 'content': content,
-    'reminderTime': reminderTime?.toIso8601String(), 'isCompleted': isCompleted ? 1 : 0,
-    'createdAt': createdAt.toIso8601String(), 'updatedAt': updatedAt.toIso8601String()};
-  factory Memo.fromMap(Map<String, dynamic> m) => Memo(id: m['id'], title: m['title'],
-    content: m['content'] ?? '', reminderTime: m['reminderTime'] != null ? DateTime.parse(m['reminderTime']) : null,
-    isCompleted: (m['isCompleted'] ?? 0) == 1, createdAt: DateTime.parse(m['createdAt']), updatedAt: DateTime.parse(m['updatedAt']));
-}
-
 // ===== MedicalRecord 医疗记录 =====
 class MedicalRecord {
   final String id;
@@ -278,3 +257,83 @@ class GrowthLog {
 }
 
 enum Mood { happy, sad, excited, calm, proud, tired }
+
+// ===== Diary 日记 =====
+class Diary {
+  final String id;
+  final String? title;
+  final String content;
+  final DateTime diaryDate;
+  final DiaryStatus qianqianStatus;
+  final List<String> scheduleIds;
+  final List<Map<String, dynamic>> scheduleSnapshots;
+  final String? progressPoints;
+  final String? improvementPoints;
+  final List<String> imagePaths;
+  final List<String> videoPaths;
+  final List<String> audioPaths;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+
+  Diary({
+    required this.id,
+    this.title,
+    required this.content,
+    required this.diaryDate,
+    required this.qianqianStatus,
+    List<String>? scheduleIds,
+    List<Map<String, dynamic>>? scheduleSnapshots,
+    this.progressPoints,
+    this.improvementPoints,
+    List<String>? imagePaths,
+    List<String>? videoPaths,
+    List<String>? audioPaths,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) : scheduleIds = scheduleIds ?? [],
+       scheduleSnapshots = scheduleSnapshots ?? [],
+       imagePaths = imagePaths ?? [],
+       videoPaths = videoPaths ?? [],
+       audioPaths = audioPaths ?? [],
+       createdAt = createdAt ?? DateTime.now(),
+       updatedAt = updatedAt ?? DateTime.now();
+
+  Map<String, dynamic> toMap() => {
+    'id': id,
+    'title': title,
+    'content': content,
+    'diaryDate': diaryDate.toIso8601String(),
+    'qianqianStatus': qianqianStatus.name,
+    'scheduleIds': jsonEncode(scheduleIds),
+    'scheduleSnapshots': jsonEncode(scheduleSnapshots),
+    'progressPoints': progressPoints,
+    'improvementPoints': improvementPoints,
+    'imagePaths': jsonEncode(imagePaths),
+    'videoPaths': jsonEncode(videoPaths),
+    'audioPaths': jsonEncode(audioPaths),
+    'createdAt': createdAt.toIso8601String(),
+    'updatedAt': updatedAt.toIso8601String(),
+  };
+
+  factory Diary.fromMap(Map<String, dynamic> m) => Diary(
+    id: m['id'],
+    title: m['title'],
+    content: m['content'] ?? '',
+    diaryDate: DateTime.parse(m['diaryDate']),
+    qianqianStatus: DiaryStatus.values.firstWhere(
+      (e) => e.name == m['qianqianStatus'],
+      orElse: () => DiaryStatus.normal,
+    ),
+    scheduleIds: (jsonDecode(m['scheduleIds'] as String? ?? '[]') as List).cast<String>(),
+    scheduleSnapshots: (jsonDecode(m['scheduleSnapshots'] as String? ?? '[]') as List).cast<Map<String, dynamic>>(),
+    progressPoints: m['progressPoints'],
+    improvementPoints: m['improvementPoints'],
+    imagePaths: (jsonDecode(m['imagePaths'] as String? ?? '[]') as List).cast<String>(),
+    videoPaths: (jsonDecode(m['videoPaths'] as String? ?? '[]') as List).cast<String>(),
+    audioPaths: (jsonDecode(m['audioPaths'] as String? ?? '[]') as List).cast<String>(),
+    createdAt: DateTime.parse(m['createdAt']),
+    updatedAt: DateTime.parse(m['updatedAt']),
+  );
+}
+
+enum DiaryStatus { good, normal, irritable }

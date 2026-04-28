@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../utils/app_theme.dart';
+import '../widgets/elegant_kit.dart';
 import '../services/notification_service.dart';
 import '../services/database_helper.dart';
 import '../providers/schedule_provider.dart';
 import '../providers/course_provider.dart';
-import '../providers/memo_provider.dart';
+import '../providers/diary_provider.dart';
 import '../providers/medical_provider.dart';
-import '../providers/growth_log_provider.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -29,190 +30,72 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('设置', style: TextStyle(color: Colors.white)),
-      ),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 芊芊头像区域
-            Center(
+    return ElegantScaffold(
+      body: Column(
+        children: [
+          const ElegantNavBar(title: '设置'),
+          Expanded(
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                    width: 100,
-                    height: 100,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: AppColors.primary.withValues(alpha: 0.4),
-                        width: 3,
-                      ),
-                      image: DecorationImage(
-                        image: AssetImage('assets/images/avatar.jpg'),
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: 8),
-                  Text(
-                    '芊芊',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.primary,
-                    ),
-                  ),
+                  _buildProfile(),
+                  const SizedBox(height: 24),
+                  _buildNotificationCard(),
+                  const SizedBox(height: 16),
+                  _buildAboutCard(),
+                  const SizedBox(height: 16),
+                  _buildDangerCard(),
                 ],
               ),
             ),
+          ),
+        ],
+      ),
+    );
+  }
 
-            SizedBox(height: 24),
-            Divider(),
-            SizedBox(height: 8),
-
-            // 提醒时间
-            ListTile(
-              leading: Icon(Icons.alarm, color: AppColors.primary),
-              title: Text('日程提前提醒'),
-              subtitle: Text('$_reminderMinutes 分钟前'),
-              trailing: DropdownButton<int>(
-                value: _reminderMinutes,
-                items: [5, 10, 15, 30, 60]
-                    .map((m) => DropdownMenuItem(value: m, child: Text('$m分钟')))
-                    .toList(),
-                onChanged: (v) async {
-                  final minutes = v ?? 15;
-                  setState(() => _reminderMinutes = minutes);
-                  await _notificationService.setReminderMinutes(minutes);
-                  if (!mounted) return;
-                  final provider = context.read<ScheduleProvider>();
-                  if (provider.schedules.isEmpty) await provider.loadSchedules();
-                  await _notificationService.rescheduleAll(provider.schedules);
-                },
-              ),
-            ),
-
-            // 通知开关
-            SwitchListTile(
-              secondary: Icon(
-                Icons.notifications_active,
-                color: AppColors.primary,
-              ),
-              title: Text('开启通知提醒'),
-              value: _notificationsEnabled,
-              activeThumbColor: AppColors.primary,
-              onChanged: (v) async {
-                if (v) {
-                  final granted = await _notificationService.requestPermission();
-                  if (!granted) {
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('请在系统设置中允许通知权限')),
-                      );
-                    }
-                    return;
-                  }
-                }
-                setState(() => _notificationsEnabled = v);
-                await _notificationService.setEnabled(v);
-                if (v && mounted) {
-                  final provider = context.read<ScheduleProvider>();
-                  if (provider.schedules.isEmpty) await provider.loadSchedules();
-                  await _notificationService.rescheduleAll(provider.schedules);
-                }
-              },
-            ),
-
-            SizedBox(height: 24),
-            Divider(),
-            SizedBox(height: 8),
-
-            // 关于
-            Text(
-              '关于应用',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-            ),
-            Card(
-              elevation: 0,
-              margin: EdgeInsets.only(top: 10),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Padding(
-                padding: EdgeInsets.all(16),
-                child: Column(
-                  children: [
-                    Row(
-                      children: [
-                        Text('📔', style: TextStyle(fontSize: 24)),
-                        SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                "Qianqian's Growth Logbook",
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 15,
-                                ),
-                              ),
-                              Text(
-                                '芊芊成长日志 v1.0.0',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: AppColors.textSecondary,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 12),
-                    Divider(),
-                    SizedBox(height: 8),
-                    Text(
-                      '专为记录孩子成长而设计的APP，帮助家长全面、系统地跟踪孩子的成长历程，为孩子打造一份独特的成长日志。',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: AppColors.textSecondary,
-                        height: 1.5,
-                      ),
-                    ),
-                    SizedBox(height: 12),
-                    Divider(),
-                    SizedBox(height: 8),
-                    Text(
-                      '如有建议或问题，请联系：bozzguo@qq.com',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: AppColors.textSecondary,
-                        height: 1.5,
-                      ),
-                    ),
-                  ],
+  // ─── 头像区 ──────────────────────────────
+  Widget _buildProfile() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      child: Center(
+        child: Column(
+          children: [
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: AppElegant.hair, width: 0.5),
+                image: const DecorationImage(
+                  image: AssetImage('assets/images/avatar.jpg'),
+                  fit: BoxFit.cover,
                 ),
+                boxShadow: AppElegant.softShadow,
               ),
             ),
-
-            SizedBox(height: 24),
-
-            // 数据管理按钮
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () => _showResetConfirm(),
-                    icon: Icon(Icons.refresh),
-                    label: Text('重置数据'),
-                  ),
-                ),
-              ],
+            const SizedBox(height: 14),
+            const Text(
+              '芊芊',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                color: AppElegant.ink,
+                letterSpacing: 0.5,
+              ),
+            ),
+            const SizedBox(height: 4),
+            const Text(
+              'GROWTH JOURNAL',
+              style: TextStyle(
+                fontSize: 10,
+                color: AppElegant.inkSoft,
+                letterSpacing: 3,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ],
         ),
@@ -220,49 +103,288 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  void _showResetConfirm() => showDialog(
-    context: context,
-    builder: (_) => AlertDialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      title: Row(
+  // ─── 通知卡 ──────────────────────────────
+  Widget _buildNotificationCard() {
+    return ElegantCard(
+      child: Column(
         children: [
-          Icon(Icons.warning_amber_rounded, color: AppColors.error),
-          SizedBox(width: 8),
-          Text('确认重置'),
+          const ElegantCardHeader(
+              icon: Icons.notifications_none_rounded, label: '通知'),
+          const SizedBox(height: 6),
+          ElegantRowTile(
+            label: '开启通知提醒',
+            trailing: Switch(
+              value: _notificationsEnabled,
+              onChanged: (v) async {
+                HapticFeedback.selectionClick();
+                if (v) {
+                  final granted =
+                      await _notificationService.requestPermission();
+                  if (!granted) {
+                    if (!mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('请在系统设置中允许通知权限'),
+                      ),
+                    );
+                    return;
+                  }
+                }
+                setState(() => _notificationsEnabled = v);
+                await _notificationService.setEnabled(v);
+                if (!mounted) return;
+                if (v) {
+                  final provider = context.read<ScheduleProvider>();
+                  if (provider.schedules.isEmpty) {
+                    await provider.loadSchedules();
+                  }
+                  await _notificationService
+                      .rescheduleAll(provider.schedules);
+                }
+              },
+            ),
+          ),
+          const ElegantDivider(),
+          ElegantRowTile(
+            label: '提前提醒时间',
+            value: '$_reminderMinutes 分钟前',
+            onTap: () => _showReminderPicker(),
+          ),
         ],
       ),
-      content: Text("确定要重置所有数据吗？\n此操作不可恢复！"),
-      actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: Text('取消')),
-        FilledButton(
-          style: FilledButton.styleFrom(backgroundColor: AppColors.error),
-          onPressed: () async {
-            Navigator.pop(context);
-            try {
-              await DatabaseHelper().resetAll();
-              await _notificationService.cancelAll();
-              if (!mounted) return;
-              await context.read<ScheduleProvider>().loadSchedules();
-              await context.read<CourseProvider>().loadCourses();
-              await context.read<MemoProvider>().loadMemos();
-              await context.read<MedicalProvider>().loadRecords();
-              await context.read<GrowthLogProvider>().loadLogs();
-              if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('所有数据已重置')),
+    );
+  }
+
+  Future<void> _showReminderPicker() async {
+    final options = [5, 10, 15, 30, 60];
+    await showModalBottomSheet(
+      context: context,
+      backgroundColor: AppElegant.card,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const ElegantSheetHandle(),
+              const SizedBox(height: 8),
+              const Text(
+                '提前提醒时间',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: AppElegant.ink,
+                  letterSpacing: 1,
+                ),
+              ),
+              const SizedBox(height: 16),
+              ...options.map((m) {
+                final selected = m == _reminderMinutes;
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: InkWell(
+                    onTap: () async {
+                      HapticFeedback.selectionClick();
+                      Navigator.pop(ctx);
+                      setState(() => _reminderMinutes = m);
+                      await _notificationService.setReminderMinutes(m);
+                      if (!mounted) return;
+                      final provider = context.read<ScheduleProvider>();
+                      if (provider.schedules.isEmpty) {
+                        await provider.loadSchedules();
+                      }
+                      await _notificationService
+                          .rescheduleAll(provider.schedules);
+                    },
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 14),
+                      decoration: BoxDecoration(
+                        color: selected
+                            ? AppElegant.accent
+                            : AppElegant.bgAlt,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        children: [
+                          Text(
+                            '$m 分钟前',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: selected
+                                  ? Colors.white
+                                  : AppElegant.ink,
+                              fontWeight: selected
+                                  ? FontWeight.w600
+                                  : FontWeight.w500,
+                            ),
+                          ),
+                          const Spacer(),
+                          if (selected)
+                            const Icon(Icons.check_rounded,
+                                color: Colors.white, size: 18),
+                        ],
+                      ),
+                    ),
+                  ),
                 );
-              }
-            } catch (e) {
-              if (mounted) {
+              }),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ─── 关于 ────────────────────────────────
+  Widget _buildAboutCard() {
+    return ElegantCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const ElegantCardHeader(
+              icon: Icons.info_outline_rounded, label: '关于应用'),
+          const SizedBox(height: 16),
+          const Text(
+            "Qianqian's Growth Logbook",
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: AppElegant.ink,
+              letterSpacing: 0.3,
+            ),
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            '芊芊成长日志 · v1.0.0',
+            style: AppText.meta,
+          ),
+          const SizedBox(height: 14),
+          const Text(
+            '专为记录孩子成长而设计的 APP，帮助家长全面、系统地跟踪孩子的成长历程，为孩子打造一份独特的成长日志。',
+            style: AppText.itemBody,
+          ),
+          const SizedBox(height: 16),
+          const ElegantDivider(),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              const Icon(Icons.mail_outline_rounded,
+                  size: 14, color: AppElegant.inkSoft),
+              const SizedBox(width: 8),
+              const Text(
+                'bozzguo@qq.com',
+                style: AppText.meta,
+              ),
+              const Spacer(),
+              Text(
+                'CONTACT',
+                style: TextStyle(
+                  fontSize: 10,
+                  color: AppElegant.inkFaint,
+                  letterSpacing: 2.5,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ─── 危险操作 ─────────────────────────────
+  Widget _buildDangerCard() {
+    return ElegantCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const ElegantCardHeader(
+              icon: Icons.warning_amber_rounded, label: '数据'),
+          const SizedBox(height: 14),
+          InkWell(
+            onTap: _showResetConfirm,
+            borderRadius: BorderRadius.circular(10),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              child: Row(
+                children: [
+                  const Icon(Icons.restart_alt_rounded,
+                      size: 18, color: AppElegant.rose),
+                  const SizedBox(width: 10),
+                  const Expanded(
+                    child: Text(
+                      '重置全部数据',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: AppElegant.rose,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  const Icon(Icons.chevron_right,
+                      size: 16, color: AppElegant.inkWhisper),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            '清空日程、日记、医疗、课程与打卡数据。此操作不可撤销。',
+            style: AppText.meta,
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showResetConfirm() {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('确认重置'),
+        content: const Text('确定要清空所有数据吗？此操作不可恢复。'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('取消'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: AppElegant.rose,
+            ),
+            onPressed: () async {
+              Navigator.pop(context);
+              try {
+                await DatabaseHelper().resetAll();
+                await _notificationService.cancelAll();
+                if (!mounted) return;
+                await context.read<ScheduleProvider>().loadSchedules();
+                if (!mounted) return;
+                await context.read<CourseProvider>().loadCourses();
+                if (!mounted) return;
+                await context.read<DiaryProvider>().loadDiaries();
+                if (!mounted) return;
+                await context.read<MedicalProvider>().loadRecords();
+                if (!mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('所有数据已重置')),
+                );
+              } catch (e) {
+                if (!mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text('重置失败：$e')),
                 );
               }
-            }
-          },
-          child: Text('确认重置'),
-        ),
-      ],
-    ),
-  );
+            },
+            child: const Text('确认重置'),
+          ),
+        ],
+      ),
+    );
+  }
 }

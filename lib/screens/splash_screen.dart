@@ -11,27 +11,25 @@ class SplashScreen extends StatefulWidget {
 class _SplashScreenState extends State<SplashScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
-  late Animation<double> _fadeAnimation;
+  late Animation<double> _fade;
 
   @override
   void initState() {
     super.initState();
     _controller = AnimationController(
-      duration: Duration(milliseconds: 100),
+      duration: const Duration(milliseconds: 600),
       vsync: this,
     );
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeIn));
+    _fade = CurvedAnimation(parent: _controller, curve: Curves.easeOut);
     _controller.forward();
 
-    Future.delayed(Duration(milliseconds: 1000), () {
+    Future.delayed(const Duration(milliseconds: 1200), () {
       if (mounted) {
         Navigator.of(context).pushReplacement(
           PageRouteBuilder(
-            pageBuilder: (_, __, ___) => HomeScreen(),
-            transitionsBuilder: (_, a, __, c) =>
+            transitionDuration: const Duration(milliseconds: 500),
+            pageBuilder: (_, _, _) => const HomeScreen(),
+            transitionsBuilder: (_, a, _, c) =>
                 FadeTransition(opacity: a, child: c),
           ),
         );
@@ -47,13 +45,15 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
+    const splashTop = Color(0xFFFDD4D6); // 图片上方的填充色
     return Scaffold(
+      backgroundColor: splashTop,
       body: FadeTransition(
-        opacity: _fadeAnimation,
+        opacity: _fade,
         child: Container(
           width: double.infinity,
           height: double.infinity,
-          color: Color(0xFFFED3DE),
+          color: splashTop,
           alignment: Alignment.bottomCenter,
           child: Image.asset(
             'assets/images/splash.jpg',

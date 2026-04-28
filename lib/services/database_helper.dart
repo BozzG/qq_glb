@@ -9,6 +9,9 @@ class DatabaseHelper {
   static final DatabaseHelper _instance = DatabaseHelper._internal();
   static Database? _database;
   
+  /// 测试模式标志 - 启用时使用内存数据库
+  static bool isTestMode = false;
+  
   factory DatabaseHelper() => _instance;
   DatabaseHelper._internal();
 
@@ -27,6 +30,17 @@ class DatabaseHelper {
   }
   
   Future<Database> _initDatabase() async {
+    // 测试模式：使用内存数据库
+    if (isTestMode) {
+      final db = await openDatabase(
+        inMemoryDatabasePath,
+        version: 3,
+        onCreate: _onCreate,
+        onUpgrade: _onUpgrade,
+      );
+      return db;
+    }
+    
     String dbPath;
     if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
       // 桌面平台使用应用数据目录
@@ -38,7 +52,7 @@ class DatabaseHelper {
     }
     return await openDatabase(
       dbPath,
-      version: 2,
+      version: 3,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -108,19 +122,6 @@ class DatabaseHelper {
       )
     ''');
     
-    // 备忘录表（独立备忘，不关联日程）
-    await db.execute('''
-      CREATE TABLE memos (
-        id TEXT PRIMARY KEY,
-        title TEXT,
-        content TEXT,
-        reminderTime TEXT,
-        isCompleted INTEGER DEFAULT 0,
-        createdAt TEXT NOT NULL,
-        updatedAt TEXT
-      )
-    ''');
-    
     // 医疗记录表
     await db.execute('''
       CREATE TABLE medical_records (
@@ -150,6 +151,26 @@ class DatabaseHelper {
         mood TEXT,           -- happy, sad, excited, etc.
         tags TEXT,           -- JSON array
         scheduleId TEXT,     -- 关联的日程
+        createdAt TEXT NOT NULL,
+        updatedAt TEXT
+      )
+    ''');
+
+    // 日记表
+    await db.execute('''
+      CREATE TABLE diaries (
+        id TEXT PRIMARY KEY,
+        title TEXT,
+        content TEXT NOT NULL,
+        diaryDate TEXT NOT NULL,
+        qianqianStatus TEXT NOT NULL,
+        scheduleIds TEXT,
+        scheduleSnapshots TEXT,
+        progressPoints TEXT,
+        improvementPoints TEXT,
+        imagePaths TEXT,
+        videoPaths TEXT,
+        audioPaths TEXT,
         createdAt TEXT NOT NULL,
         updatedAt TEXT
       )
@@ -256,6 +277,31 @@ class DatabaseHelper {
         }
       }
     }
+
+    if (oldVersion < 3) {
+      // v2 → v3: 删除 memos 表（备忘录功能被日记功能替代）
+      await db.execute('DROP TABLE IF EXISTS memos');
+
+      // v2 → v3: 创建 diaries 表（日记功能）
+      await db.execute('''
+        CREATE TABLE diaries (
+          id TEXT PRIMARY KEY,
+          title TEXT,
+          content TEXT NOT NULL,
+          diaryDate TEXT NOT NULL,
+          qianqianStatus TEXT NOT NULL,
+          scheduleIds TEXT,
+          scheduleSnapshots TEXT,
+          progressPoints TEXT,
+          improvementPoints TEXT,
+          imagePaths TEXT,
+          videoPaths TEXT,
+          audioPaths TEXT,
+          createdAt TEXT NOT NULL,
+          updatedAt TEXT
+        )
+      ''');
+    }
   }
   
   // 通用CRUD操作
@@ -285,7 +331,7 @@ class DatabaseHelper {
     await db.transaction((txn) async {
       final tables = [
         'schedules', 'check_ins', 'courses', 'course_consumptions',
-        'memos', 'medical_records', 'growth_logs', 'app_settings',
+        'medical_records', 'growth_logs', 'diaries', 'app_settings',
       ];
       for (final table in tables) {
         await txn.delete(table);
@@ -299,4 +345,22 @@ class DatabaseHelper {
   /// 判断两个DateTime是否是同一天
   static bool isSameDay(DateTime a, DateTime b) =>
       a.year == b.year && a.month == b.month && a.day == b.day;
+
+  /// 测试辅助方法：重置数据库实例（用于测试）
+  void resetDatabase() {
+    _database = null;
+  }
+
+  /// 测试辅助方法：重新创建所有表（用于测试）
+  Future<void> recreateTables() async {
+    final db = await database;
+    final tables = [
+      'schedules', 'check_ins', 'courses', 'course_consumptions',
+      'medical_records', 'growth_logs', 'diaries', 'app_settings',
+    ];
+    for (final table in tables) {
+      await db.execute('DROP TABLE IF EXISTS $table');
+    }
+    await _onCreate(db, 3);
+  }
 }

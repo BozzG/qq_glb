@@ -6,9 +6,8 @@ import 'services/database_helper.dart';
 import 'services/notification_service.dart';
 import 'providers/schedule_provider.dart';
 import 'providers/course_provider.dart';
-import 'providers/memo_provider.dart';
+import 'providers/diary_provider.dart';
 import 'providers/medical_provider.dart';
-import 'providers/growth_log_provider.dart';
 import 'screens/splash_screen.dart';
 
 void main() async {
@@ -28,9 +27,8 @@ class QianqianGrowthApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => ScheduleProvider()),
         ChangeNotifierProvider(create: (_) => CourseProvider()),
-        ChangeNotifierProvider(create: (_) => MemoProvider()),
+        ChangeNotifierProvider(create: (_) => DiaryProvider()),
         ChangeNotifierProvider(create: (_) => MedicalProvider()),
-        ChangeNotifierProvider(create: (_) => GrowthLogProvider()),
       ],
       child: MaterialApp(
         title: "芊芊成长日志",

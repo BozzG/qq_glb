@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 import '../models/models.dart';
 import '../providers/medical_provider.dart';
 import '../utils/app_theme.dart';
+import '../widgets/elegant_kit.dart';
 
 class MedicalRecordsScreen extends StatefulWidget {
   const MedicalRecordsScreen({super.key});
@@ -22,42 +25,62 @@ class _MedicalRecordsScreenState extends State<MedicalRecordsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('健康管理', style: TextStyle(color: Colors.white)),
-        actions: [
-          IconButton(icon: Icon(Icons.add_circle_outline), onPressed: () => _showAddRecordDialog())
+    return ElegantScaffold(
+      body: Column(
+        children: [
+          ElegantNavBar(
+            title: '健康管理',
+            actions: [
+              ElegantCircleIconButton(
+                icon: Icons.add_rounded,
+                onTap: _showAddRecordDialog,
+              ),
+            ],
+          ),
+          Expanded(
+            child: Consumer<MedicalProvider>(
+              builder: (ctx, provider, _) {
+                if (provider.isLoading) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                return RefreshIndicator(
+                  color: AppElegant.accent,
+                  onRefresh: () => provider.loadRecords(),
+                  child: provider.records.isEmpty
+                      ? ListView(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          children: [
+                            const SizedBox(height: 120),
+                            ElegantEmpty(
+                              icon: Icons.medical_services_outlined,
+                              label: '暂无医疗记录',
+                              hint: '从 + 按钮添加就诊记录',
+                              action: OutlinedButton(
+                                onPressed: _showAddRecordDialog,
+                                child: const Text('添加记录'),
+                              ),
+                            ),
+                          ],
+                        )
+                      : ListView.separated(
+                          padding:
+                              const EdgeInsets.fromLTRB(20, 4, 20, 32),
+                          itemCount: provider.records.length,
+                          separatorBuilder: (_, __) =>
+                              const SizedBox(height: 10),
+                          itemBuilder: (ctx, idx) {
+                            final r = provider.records[idx];
+                            return _MedicalCard(
+                              record: r,
+                              onDelete: () => provider.deleteRecord(r.id),
+                            );
+                          },
+                        ),
+                );
+              },
+            ),
+          ),
         ],
-      ),
-      body: Consumer<MedicalProvider>(
-        builder: (ctx, provider, _) {
-          if (provider.isLoading) return Center(child: CircularProgressIndicator());
-          
-          return RefreshIndicator(
-            onRefresh: () => provider.loadRecords(),
-            child: provider.records.isEmpty
-              ? Center(child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.local_hospital_outlined, size: 64, color: AppColors.textHint),
-                    SizedBox(height: 12),
-                    Text('暂无医疗记录', style: TextStyle(color: AppColors.textHint)),
-                    SizedBox(height: 8),
-                    TextButton(onPressed: _showAddRecordDialog, child: Text('添加记录'))
-                  ],
-                ))
-              : ListView.builder(
-                  padding: EdgeInsets.all(16),
-                  itemCount: provider.records.length,
-                  itemBuilder: (ctx, idx) => _MedicalCard(
-                    record: provider.records[idx],
-                    onDelete: () async {
-                      await context.read<MedicalProvider>().deleteRecord(provider.records[idx].id);
-                    },
-                  ),
-                ),
-          );
-        },
       ),
     );
   }
@@ -70,27 +93,16 @@ class _MedicalRecordsScreenState extends State<MedicalRecordsScreen> {
     final notesCtrl = TextEditingController();
     DateTime visitDate = DateTime.now();
 
-    showDialog(
+    await showDialog(
       context: context,
       builder: (_) => StatefulBuilder(
         builder: (_, setState) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-          titlePadding: EdgeInsets.fromLTRB(20, 20, 20, 4),
-          title: Row(children: [
-            Icon(Icons.medical_services, color: AppColors.scheduleMedical),
-            SizedBox(width: 8),
-            Text('添加医疗记录')
-          ]),
+          title: const Text('添加就诊记录'),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                ListTile(
-                  dense: true,
-                  contentPadding: EdgeInsets.zero,
-                  leading: Icon(Icons.calendar_today, size: 18, color: AppColors.primary),
-                  title: Text('${visitDate.year}-${visitDate.month.toString().padLeft(2,'0')}-${visitDate.day.toString().padLeft(2,'0')}'),
-                  trailing: Icon(Icons.edit_calendar, size: 18),
+                InkWell(
                   onTap: () async {
                     final date = await showDatePicker(
                       context: context,
@@ -98,38 +110,90 @@ class _MedicalRecordsScreenState extends State<MedicalRecordsScreen> {
                       firstDate: DateTime(2020),
                       lastDate: DateTime(2030),
                     );
-                    if (date != null) {
-                      setState(() => visitDate = date);
-                    }
+                    if (date != null) setState(() => visitDate = date);
                   },
+                  borderRadius: BorderRadius.circular(10),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: AppElegant.bgAlt,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: AppElegant.hair, width: 0.5),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.event_outlined,
+                            size: 16, color: AppElegant.inkSoft),
+                        const SizedBox(width: 10),
+                        Text(
+                          DateFormat('yyyy 年 M 月 d 日').format(visitDate),
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: AppElegant.ink,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const Spacer(),
+                        const Icon(Icons.chevron_right,
+                            size: 16, color: AppElegant.inkWhisper),
+                      ],
+                    ),
+                  ),
                 ),
-                Divider(),
-                TextField(controller: hospitalCtrl, decoration: InputDecoration(prefixIcon: Icon(Icons.location_city), labelText: '医院名称')),
-                TextField(controller: doctorCtrl, decoration: InputDecoration(prefixIcon: Icon(Icons.person), labelText: '医生姓名')),
-                TextField(controller: diagnosisCtrl, maxLines: 2, decoration: InputDecoration(prefixIcon: Icon(Icons.assignment), labelText: '诊断结果')),
-                TextField(controller: medicationCtrl, maxLines: 2, decoration: InputDecoration(prefixIcon: Icon(Icons.medication), labelText: '服药/治疗建议')),
-                TextField(controller: notesCtrl, maxLines: 2, decoration: InputDecoration(prefixIcon: Icon(Icons.note_add), labelText: '备注')),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: hospitalCtrl,
+                  decoration: const InputDecoration(labelText: '医院名称'),
+                ),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: doctorCtrl,
+                  decoration: const InputDecoration(labelText: '医生姓名'),
+                ),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: diagnosisCtrl,
+                  maxLines: 2,
+                  decoration: const InputDecoration(labelText: '诊断结果'),
+                ),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: medicationCtrl,
+                  maxLines: 2,
+                  decoration: const InputDecoration(labelText: '用药 / 治疗建议'),
+                ),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: notesCtrl,
+                  maxLines: 2,
+                  decoration: const InputDecoration(labelText: '备注'),
+                ),
               ],
             ),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(context), child: Text('取消')),
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('取消'),
+            ),
             FilledButton(
-              style: FilledButton.styleFrom(backgroundColor: AppColors.scheduleMedical),
               onPressed: () async {
-                await context.read<MedicalProvider>().addRecord(MedicalRecord(
-                  id: Uuid().v4(),
-                  hospitalName: hospitalCtrl.text.trim(),
-                  doctorName: doctorCtrl.text.trim(),
-                  diagnosis: diagnosisCtrl.text.trim(),
-                  medication: medicationCtrl.text.trim(),
-                  notes: notesCtrl.text.trim(),
-                  visitDate: visitDate,
-                ));
+                await context.read<MedicalProvider>().addRecord(
+                      MedicalRecord(
+                        id: const Uuid().v4(),
+                        hospitalName: hospitalCtrl.text.trim(),
+                        doctorName: doctorCtrl.text.trim(),
+                        diagnosis: diagnosisCtrl.text.trim(),
+                        medication: medicationCtrl.text.trim(),
+                        notes: notesCtrl.text.trim(),
+                        visitDate: visitDate,
+                      ),
+                    );
                 if (mounted) Navigator.pop(context);
               },
-              child: Text('保存记录'),
-            )
+              child: const Text('保存'),
+            ),
           ],
         ),
       ),
@@ -145,79 +209,112 @@ class _MedicalCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 0,
-      margin: EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+    return Material(
+      color: Colors.transparent,
       child: InkWell(
-        onTap: () => _showDetail(context),
-        borderRadius: BorderRadius.circular(18),
-        child: Padding(
-          padding: EdgeInsets.all(16),
+        onTap: () {
+          HapticFeedback.selectionClick();
+          _showDetail(context);
+        },
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppElegant.card,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppElegant.hair, width: 0.5),
+          ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // 日期
               Container(
-                width: 48,
-                height: 54,
+                width: 52,
+                height: 60,
                 decoration: BoxDecoration(
-                  color: AppColors.scheduleMedical.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(14),
+                  color: AppElegant.rose.withValues(alpha: 0.06),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                      color: AppElegant.rose.withValues(alpha: 0.2),
+                      width: 0.5),
                 ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.local_hospital, color: AppColors.scheduleMedical, size: 22),
-                    SizedBox(height: 2),
                     Text(
-                      '${record.visitDate.month}/${record.visitDate.day}',
-                      style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.scheduleMedical),
+                      '${record.visitDate.day}',
+                      style: const TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w700,
+                        color: AppElegant.rose,
+                        height: 1,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      DateFormat('MMM', 'zh_CN').format(record.visitDate),
+                      style: const TextStyle(
+                        fontSize: 10,
+                        color: AppElegant.rose,
+                        letterSpacing: 1.5,
+                      ),
                     ),
                   ],
                 ),
               ),
-              SizedBox(width: 12),
+              const SizedBox(width: 14),
+              // 内容
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    if (record.hospitalName.isNotEmpty)
-                      Text(record.hospitalName, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary))
-                    else
-                      Text('就诊记录', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-                    if (record.doctorName.isNotEmpty)
-                      Row(children: [
-                        Icon(Icons.person_outline, size: 13, color: AppColors.textSecondary),
-                        SizedBox(width: 3),
-                        Text(record.doctorName, style: TextStyle(fontSize: 13, color: AppColors.textSecondary)),
-                      ]),
-                    if (record.diagnosis.isNotEmpty)
-                      Padding(
-                        padding: EdgeInsets.only(top: 3),
-                        child: Text(record.diagnosis, maxLines: 2, overflow: TextOverflow.ellipsis,
-                          style: TextStyle(fontSize: 13, color: AppColors.textSecondary)),
+                    Text(
+                      record.hospitalName.isNotEmpty
+                          ? record.hospitalName
+                          : '就诊记录',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: AppElegant.ink,
+                        letterSpacing: 0.3,
                       ),
-                    SizedBox(height: 6),
+                    ),
+                    if (record.doctorName.isNotEmpty) ...[
+                      const SizedBox(height: 3),
+                      Row(
+                        children: [
+                          const Icon(Icons.person_outline_rounded,
+                              size: 11, color: AppElegant.inkFaint),
+                          const SizedBox(width: 4),
+                          Text(record.doctorName, style: AppText.meta),
+                        ],
+                      ),
+                    ],
+                    if (record.diagnosis.isNotEmpty) ...[
+                      const SizedBox(height: 6),
+                      Text(
+                        record.diagnosis,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: AppElegant.inkSoft,
+                          height: 1.4,
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 8),
                     Wrap(
-                      spacing: 5,
+                      spacing: 6,
                       runSpacing: 4,
                       children: [
                         if (record.diagnosis.isNotEmpty)
-                          Chip(
-                            label: Text('诊断', style: TextStyle(fontSize: 11)),
-                            backgroundColor: Colors.blue.shade50,
-                            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                            visualDensity: VisualDensity.compact,
-                            padding: EdgeInsets.zero,
-                          ),
+                          const ElegantBadge(text: '诊断'),
                         if (record.medication.isNotEmpty)
-                          Chip(
-                            label: Text('用药建议', style: TextStyle(fontSize: 11)),
-                            backgroundColor: Colors.orange.shade50,
-                            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                            visualDensity: VisualDensity.compact,
-                            padding: EdgeInsets.zero,
-                          ),
+                          ElegantBadge(
+                              text: '用药', color: AppElegant.sand),
                       ],
                     ),
                   ],
@@ -234,146 +331,172 @@ class _MedicalCard extends StatelessWidget {
     showModalBottomSheet(
       context: ctx,
       isScrollControlled: true,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      backgroundColor: AppElegant.card,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
       builder: (_) => DraggableScrollableSheet(
         initialChildSize: 0.7,
         minChildSize: 0.4,
+        maxChildSize: 0.95,
         expand: false,
         builder: (_, scrollController) {
-          return Container(
-            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
-            child: ListView(
-              controller: scrollController,
-              padding: EdgeInsets.all(24),
-              children: [
-                Center(
-                  child: Container(
-                    width: 40,
-                    height: 4,
-                    decoration: BoxDecoration(color: AppColors.textHint, borderRadius: BorderRadius.circular(2)),
-                  ),
-                ),
-                SizedBox(height: 16),
-
-                // 头部
-                Row(children: [
+          return ListView(
+            controller: scrollController,
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
+            children: [
+              const Center(child: ElegantSheetHandle()),
+              const SizedBox(height: 12),
+              // 头部
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
                   Container(
-                    width: 56,
-                    height: 56,
+                    width: 48,
+                    height: 48,
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(colors: [
-                        AppColors.scheduleMedical.withValues(alpha: 0.15),
-                        AppColors.scheduleMedical.withValues(alpha: 0.05),
-                      ]),
-                      borderRadius: BorderRadius.circular(16),
+                      color: AppElegant.rose.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(14),
                     ),
-                    child: Icon(Icons.local_hospital, size: 28, color: AppColors.scheduleMedical),
+                    child: const Icon(
+                      Icons.medical_services_outlined,
+                      color: AppElegant.rose,
+                      size: 20,
+                    ),
                   ),
-                  SizedBox(width: 14),
+                  const SizedBox(width: 14),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          record.hospitalName.isNotEmpty ? record.hospitalName : '医疗记录',
-                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                          record.hospitalName.isNotEmpty
+                              ? record.hospitalName
+                              : '医疗记录',
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                            color: AppElegant.ink,
+                            letterSpacing: 0.3,
+                          ),
                         ),
+                        const SizedBox(height: 2),
                         Text(
-                          '${record.visitDate.year}年${record.visitDate.month}月${record.visitDate.day}日',
-                          style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                          DateFormat('yyyy 年 M 月 d 日 · EEEE', 'zh_CN')
+                              .format(record.visitDate),
+                          style: AppText.meta,
                         ),
                       ],
                     ),
                   ),
-                ]),
-
-                Divider(height: 30),
-
-                // 详情字段
-                if (record.doctorName.isNotEmpty)
-                  _DetailRow(icon: Icons.person, label: '医生', value: record.doctorName),
-                if (record.diagnosis.isNotEmpty)
-                  _DetailRow(icon: Icons.assignment, label: '诊断结果', value: record.diagnosis),
-                if (record.medication.isNotEmpty)
-                  _DetailRow(icon: Icons.medication_liquid_outlined, label: '治疗建议', value: record.medication),
-                if (record.notes.isNotEmpty)
-                  _DetailRow(icon: Icons.note, label: '备注', value: record.notes),
-
-                // 图片展示
-                if (record.reportImagePaths.isNotEmpty) ...[
-                  SizedBox(height: 16),
-                  Text('报告图片', style: TextStyle(fontWeight: FontWeight.bold)),
-                  SizedBox(height: 8),
-                  SizedBox(
-                    height: 150,
-                    child: ListView(
-                      scrollDirection: Axis.horizontal,
-                      children: record.reportImagePaths.map((path) {
-                        return Container(
-                          width: 200,
-                          margin: EdgeInsets.only(right: 10),
-                          decoration: BoxDecoration(
-                            color: AppColors.primaryLight,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: path.startsWith('/')
-                            ? ClipRRect(
-                                borderRadius: BorderRadius.circular(12),
-                                child: Image.asset(path, fit: BoxFit.cover),
-                              )
-                            : Center(
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(Icons.image_outlined, size: 36, color: AppColors.textHint),
-                                    Text(path.split('/').last, style: TextStyle(fontSize: 11, color: AppColors.textHint)),
-                                  ],
-                                ),
-                              ),
-                        );
-                      }).toList(),
-                    ),
-                  ),
                 ],
+              ),
+              const SizedBox(height: 20),
+              const ElegantDivider(),
+              const SizedBox(height: 16),
 
-                SizedBox(height: 16),
-                OutlinedButton.icon(
-                  onPressed: onDelete,
-                  icon: Icon(Icons.delete_outline),
-                  label: Text('删除此记录'),
-                  style: OutlinedButton.styleFrom(foregroundColor: AppColors.error),
+              if (record.doctorName.isNotEmpty)
+                _detail(Icons.person_outline_rounded, '医生',
+                    record.doctorName),
+              if (record.diagnosis.isNotEmpty)
+                _detail(Icons.assignment_outlined, '诊断结果',
+                    record.diagnosis),
+              if (record.medication.isNotEmpty)
+                _detail(Icons.medication_outlined, '治疗建议',
+                    record.medication),
+              if (record.notes.isNotEmpty)
+                _detail(Icons.edit_note_rounded, '备注', record.notes),
+
+              if (record.reportImagePaths.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                const Text('报告图片',
+                    style: TextStyle(
+                        fontSize: 11,
+                        color: AppElegant.inkSoft,
+                        letterSpacing: 2,
+                        fontWeight: FontWeight.w600)),
+                const SizedBox(height: 10),
+                SizedBox(
+                  height: 140,
+                  child: ListView(
+                    scrollDirection: Axis.horizontal,
+                    children: record.reportImagePaths.map((p) {
+                      return Container(
+                        width: 180,
+                        margin: const EdgeInsets.only(right: 10),
+                        decoration: BoxDecoration(
+                          color: AppElegant.bgAlt,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                              color: AppElegant.hair, width: 0.5),
+                        ),
+                        alignment: Alignment.center,
+                        child: const Icon(
+                          Icons.image_outlined,
+                          size: 32,
+                          color: AppElegant.inkFaint,
+                        ),
+                      );
+                    }).toList(),
+                  ),
                 ),
               ],
-            ),
+
+              const SizedBox(height: 24),
+              Builder(
+                builder: (innerCtx) => OutlinedButton.icon(
+                  onPressed: () {
+                    onDelete();
+                    Navigator.pop(innerCtx);
+                  },
+                  icon: const Icon(Icons.delete_outline_rounded, size: 16),
+                  label: const Text('删除此记录'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppElegant.rose,
+                    side: BorderSide(
+                        color: AppElegant.rose.withValues(alpha: 0.3),
+                        width: 0.5),
+                    minimumSize: const Size(double.infinity, 46),
+                  ),
+                ),
+              ),
+            ],
           );
         },
       ),
     );
   }
-}
 
-class _DetailRow extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String value;
-
-  const _DetailRow({required this.icon, required this.label, required this.value});
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _detail(IconData icon, String label, String value) {
     return Padding(
-      padding: EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.only(bottom: 14),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 19, color: AppColors.primary),
-          SizedBox(width: 10),
+          Icon(icon, size: 16, color: AppElegant.inkSoft),
+          const SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label, style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
-                Text(value, style: TextStyle(fontSize: 14, color: AppColors.textPrimary, height: 1.4)),
+                Text(
+                  label,
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: AppElegant.inkSoft,
+                    letterSpacing: 1.5,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  value,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: AppElegant.ink,
+                    height: 1.6,
+                  ),
+                ),
               ],
             ),
           ),

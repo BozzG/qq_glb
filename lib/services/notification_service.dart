@@ -20,11 +20,21 @@ class NotificationService {
   bool _enabled = true;
   int _reminderMinutes = 15;
 
+  /// 测试模式标志 - 启用时跳过实际通知调度
+  bool isTestMode = false;
+
   bool get enabled => _enabled;
   int get reminderMinutes => _reminderMinutes;
 
   Future<void> init() async {
     if (_initialized) return;
+
+    // 测试模式：跳过插件初始化
+    if (isTestMode) {
+      _initialized = true;
+      debugPrint('[NotificationService] 测试模式：跳过插件初始化');
+      return;
+    }
 
     // 初始化时区
     tzdata.initializeTimeZones();
@@ -118,6 +128,12 @@ class NotificationService {
 
   /// 为日程调度通知
   Future<void> scheduleForSchedule(Schedule schedule) async {
+    // 测试模式：跳过实际通知调度
+    if (isTestMode) {
+      debugPrint('[NotificationService] 测试模式：跳过通知调度: ${schedule.title}');
+      return;
+    }
+    
     if (!_enabled) return;
 
     final notifyTime = schedule.dateTime.subtract(Duration(minutes: _reminderMinutes));
@@ -173,6 +189,10 @@ class NotificationService {
 
   /// 取消日程的通知
   Future<void> cancelForSchedule(String scheduleId) async {
+    if (isTestMode) {
+      debugPrint('[NotificationService] 测试模式：跳过取消通知: $scheduleId');
+      return;
+    }
     final notificationId = scheduleId.hashCode.abs() % 2147483647;
     await _plugin.cancel(notificationId);
     debugPrint('[NotificationService] 已取消通知: $scheduleId');
@@ -180,12 +200,20 @@ class NotificationService {
 
   /// 取消所有通知
   Future<void> cancelAll() async {
+    if (isTestMode) {
+      debugPrint('[NotificationService] 测试模式：跳过取消所有通知');
+      return;
+    }
     await _plugin.cancelAll();
     debugPrint('[NotificationService] 已取消所有通知');
   }
 
   /// 为所有日程重新调度通知（设置变更时使用）
   Future<void> rescheduleAll(List<Schedule> schedules) async {
+    if (isTestMode) {
+      debugPrint('[NotificationService] 测试模式：跳过重新调度所有通知');
+      return;
+    }
     await cancelAll();
     if (!_enabled) return;
 
