@@ -85,7 +85,9 @@ class _AddScheduleScreenState extends State<AddScheduleScreen> {
           content: const Text('请输入日程标题'),
           behavior: SnackBarBehavior.floating,
           margin: const EdgeInsets.all(16),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
         ),
       );
       return;
@@ -129,7 +131,9 @@ class _AddScheduleScreenState extends State<AddScheduleScreen> {
           content: Text(isEditing ? '已更新' : '已添加'),
           behavior: SnackBarBehavior.floating,
           margin: const EdgeInsets.all(16),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
         ),
       );
     }
@@ -137,13 +141,14 @@ class _AddScheduleScreenState extends State<AddScheduleScreen> {
 
   // ─── 数据映射 ───────────────────────────────────────────────
   String _repeatLabel(RepeatType t) => const {
-        RepeatType.none: '不重复',
-        RepeatType.daily: '每天',
-        RepeatType.weekly: '每周',
-        RepeatType.custom: '自定义',
-      }[t]!;
+    RepeatType.none: '不重复',
+    RepeatType.daily: '每天',
+    RepeatType.weekly: '每周',
+    RepeatType.custom: '自定义',
+  }[t]!;
 
-  Color _typeColor(ScheduleType t) => {
+  Color _typeColor(ScheduleType t) =>
+      {
         'nursery': AppColors.scheduleNursery,
         'sports': AppColors.scheduleSports,
         'language': AppColors.scheduleLanguage,
@@ -154,22 +159,22 @@ class _AddScheduleScreenState extends State<AddScheduleScreen> {
       AppColors.scheduleGeneral;
 
   String _typeLabel(ScheduleType t) => const {
-        'school': '上学',
-        'nursery': '托班',
-        'sports': '运动',
-        'language': '语言',
-        'medical': '医疗',
-        'general': '通用',
-      }[t.name]!;
+    'school': '上学',
+    'nursery': '托班',
+    'sports': '运动',
+    'language': '语言',
+    'medical': '医疗',
+    'general': '通用',
+  }[t.name]!;
 
   IconData _typeIcon(ScheduleType t) => const {
-        'school': Icons.school_outlined,
-        'nursery': Icons.child_care_outlined,
-        'sports': Icons.sports_basketball_outlined,
-        'language': Icons.translate_outlined,
-        'medical': Icons.local_hospital_outlined,
-        'general': Icons.label_outline,
-      }[t.name]!;
+    'school': Icons.school_outlined,
+    'nursery': Icons.child_care_outlined,
+    'sports': Icons.sports_basketball_outlined,
+    'language': Icons.translate_outlined,
+    'medical': Icons.local_hospital_outlined,
+    'general': Icons.label_outline,
+  }[t.name]!;
 
   // ─── 日期/时间选择器 ───────────────────────────────────────
   Future<void> _pickDate() async {
@@ -186,7 +191,12 @@ class _AddScheduleScreenState extends State<AddScheduleScreen> {
       ),
       onConfirm: () => setState(() {
         _dateTime = DateTime(
-            temp.year, temp.month, temp.day, _dateTime.hour, _dateTime.minute);
+          temp.year,
+          temp.month,
+          temp.day,
+          _dateTime.hour,
+          _dateTime.minute,
+        );
       }),
     );
   }
@@ -272,7 +282,9 @@ class _AddScheduleScreenState extends State<AddScheduleScreen> {
   void _toggleEndTime() {
     HapticFeedback.selectionClick();
     setState(() {
-      _endTime = _endTime == null ? _dateTime.add(const Duration(hours: 1)) : null;
+      _endTime = _endTime == null
+          ? _dateTime.add(const Duration(hours: 1))
+          : null;
     });
   }
 
@@ -357,7 +369,7 @@ class _AddScheduleScreenState extends State<AddScheduleScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            isEditing ? '修改日程详情' : '记录此刻的安排',
+            isEditing ? '修改日程详情' : '记录成长的安排',
             style: const TextStyle(
               fontSize: 12,
               color: _inkSoft,
@@ -409,7 +421,10 @@ class _AddScheduleScreenState extends State<AddScheduleScreen> {
           // 日期
           _RowTile(
             label: '日期',
-            value: DateFormat('yyyy 年 M 月 d 日 · EEEE', 'zh_CN').format(_dateTime),
+            value: DateFormat(
+              'yyyy 年 M 月 d 日 · EEEE',
+              'zh_CN',
+            ).format(_dateTime),
             onTap: _pickDate,
           ),
           const _HairDivider(),
@@ -469,9 +484,7 @@ class _AddScheduleScreenState extends State<AddScheduleScreen> {
               child: Row(
                 children: [
                   Icon(
-                    _endTime == null
-                        ? Icons.add_rounded
-                        : Icons.remove_rounded,
+                    _endTime == null ? Icons.add_rounded : Icons.remove_rounded,
                     size: 16,
                     color: _ink,
                   ),
@@ -538,7 +551,8 @@ class _AddScheduleScreenState extends State<AddScheduleScreen> {
               return Expanded(
                 child: Padding(
                   padding: EdgeInsets.only(
-                      right: type != RepeatType.values.last ? 8 : 0),
+                    right: type != RepeatType.values.last ? 8 : 0,
+                  ),
                   child: _SegmentChip(
                     label: _repeatLabel(type),
                     selected: selected,
@@ -563,49 +577,49 @@ class _AddScheduleScreenState extends State<AddScheduleScreen> {
             const SizedBox(height: 16),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: ['一', '二', '三', '四', '五', '六', '日']
-                  .asMap()
-                  .entries
-                  .map((e) {
-                final day = e.key + 1;
-                final active = _repeatDays.contains(day);
-                return GestureDetector(
-                  onTap: () {
-                    HapticFeedback.selectionClick();
-                    setState(() {
-                      if (active) {
-                        _repeatDays.remove(day);
-                      } else {
-                        _repeatDays.add(day);
-                      }
-                    });
-                  },
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 180),
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: active ? _accent : Colors.transparent,
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: active ? _accent : _hair,
-                        width: 1,
+              children: ['一', '二', '三', '四', '五', '六', '日'].asMap().entries.map(
+                (e) {
+                  final day = e.key + 1;
+                  final active = _repeatDays.contains(day);
+                  return GestureDetector(
+                    onTap: () {
+                      HapticFeedback.selectionClick();
+                      setState(() {
+                        if (active) {
+                          _repeatDays.remove(day);
+                        } else {
+                          _repeatDays.add(day);
+                        }
+                      });
+                    },
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 180),
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: active ? _accent : Colors.transparent,
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: active ? _accent : _hair,
+                          width: 1,
+                        ),
                       ),
-                    ),
-                    child: Center(
-                      child: Text(
-                        e.value,
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: active ? Colors.white : _inkSoft,
-                          fontWeight:
-                              active ? FontWeight.w600 : FontWeight.w500,
+                      child: Center(
+                        child: Text(
+                          e.value,
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: active ? Colors.white : _inkSoft,
+                            fontWeight: active
+                                ? FontWeight.w600
+                                : FontWeight.w500,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                );
-              }).toList(),
+                  );
+                },
+              ).toList(),
             ),
           ],
         ],
@@ -645,8 +659,11 @@ class _AddScheduleScreenState extends State<AddScheduleScreen> {
         children: [
           Row(
             children: [
-              const Icon(Icons.auto_awesome_outlined,
-                  size: 16, color: _inkSoft),
+              const Icon(
+                Icons.auto_awesome_outlined,
+                size: 16,
+                color: _inkSoft,
+              ),
               const SizedBox(width: 8),
               const Text(
                 '关联课程',
@@ -691,14 +708,12 @@ class _AddScheduleScreenState extends State<AddScheduleScreen> {
                     ),
                     child: const Row(
                       children: [
-                        Icon(Icons.info_outline,
-                            size: 14, color: _inkSoft),
+                        Icon(Icons.info_outline, size: 14, color: _inkSoft),
                         SizedBox(width: 8),
                         Expanded(
                           child: Text(
                             '暂无课程，请先在「课程管理」中添加',
-                            style:
-                                TextStyle(fontSize: 12, color: _inkSoft),
+                            style: TextStyle(fontSize: 12, color: _inkSoft),
                           ),
                         ),
                       ],
@@ -719,7 +734,9 @@ class _AddScheduleScreenState extends State<AddScheduleScreen> {
                       child: AnimatedContainer(
                         duration: const Duration(milliseconds: 200),
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 8),
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
                         decoration: BoxDecoration(
                           color: selected
                               ? color.withValues(alpha: 0.08)
@@ -840,10 +857,7 @@ class _Card extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: const Color(0xFFEDEDED),
-          width: 0.5,
-        ),
+        border: Border.all(color: const Color(0xFFEDEDED), width: 0.5),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.03),
@@ -912,8 +926,9 @@ class _RowTile extends StatelessWidget {
       child: Padding(
         padding: EdgeInsets.symmetric(vertical: valueLarge ? 14 : 16),
         child: Row(
-          crossAxisAlignment:
-              valueLarge ? CrossAxisAlignment.end : CrossAxisAlignment.center,
+          crossAxisAlignment: valueLarge
+              ? CrossAxisAlignment.end
+              : CrossAxisAlignment.center,
           children: [
             Text(
               label,
@@ -928,8 +943,7 @@ class _RowTile extends StatelessWidget {
               value,
               style: TextStyle(
                 fontSize: valueLarge ? 36 : 15,
-                fontWeight:
-                    valueLarge ? FontWeight.w300 : FontWeight.w500,
+                fontWeight: valueLarge ? FontWeight.w300 : FontWeight.w500,
                 color: const Color(0xFF1C1C1E),
                 letterSpacing: valueLarge ? -1 : 0,
                 height: 1,
@@ -938,8 +952,11 @@ class _RowTile extends StatelessWidget {
             const SizedBox(width: 8),
             Padding(
               padding: EdgeInsets.only(bottom: valueLarge ? 4 : 0),
-              child: const Icon(Icons.chevron_right,
-                  size: 16, color: Color(0xFFBDBDBD)),
+              child: const Icon(
+                Icons.chevron_right,
+                size: 16,
+                color: Color(0xFFBDBDBD),
+              ),
             ),
           ],
         ),
@@ -994,8 +1011,7 @@ class _TypeChip extends StatelessWidget {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         curve: Curves.easeOutCubic,
-        padding:
-            const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
         decoration: BoxDecoration(
           color: selected ? color.withValues(alpha: 0.08) : Colors.white,
           borderRadius: BorderRadius.circular(22),
@@ -1009,17 +1025,18 @@ class _TypeChip extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon,
-                size: 15,
-                color: selected ? color : const Color(0xFF6E6E73)),
+            Icon(
+              icon,
+              size: 15,
+              color: selected ? color : const Color(0xFF6E6E73),
+            ),
             const SizedBox(width: 6),
             Text(
               label,
               style: TextStyle(
                 fontSize: 13,
                 color: selected ? color : const Color(0xFF1C1C1E),
-                fontWeight:
-                    selected ? FontWeight.w600 : FontWeight.w500,
+                fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
               ),
             ),
           ],
@@ -1051,9 +1068,7 @@ class _SegmentChip extends StatelessWidget {
           color: selected ? const Color(0xFF1C1C1E) : Colors.white,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: selected
-                ? const Color(0xFF1C1C1E)
-                : const Color(0xFFEDEDED),
+            color: selected ? const Color(0xFF1C1C1E) : const Color(0xFFEDEDED),
             width: 0.5,
           ),
         ),
@@ -1089,8 +1104,9 @@ class _PlainInputRow extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 14),
       child: Row(
-        crossAxisAlignment:
-            maxLines > 1 ? CrossAxisAlignment.start : CrossAxisAlignment.center,
+        crossAxisAlignment: maxLines > 1
+            ? CrossAxisAlignment.start
+            : CrossAxisAlignment.center,
         children: [
           Padding(
             padding: EdgeInsets.only(top: maxLines > 1 ? 2 : 0),
@@ -1149,10 +1165,7 @@ class _SheetHeader extends StatelessWidget {
             onPressed: onCancel,
             child: const Text(
               '取消',
-              style: TextStyle(
-                color: Color(0xFF6E6E73),
-                fontSize: 15,
-              ),
+              style: TextStyle(color: Color(0xFF6E6E73), fontSize: 15),
             ),
           ),
           Text(

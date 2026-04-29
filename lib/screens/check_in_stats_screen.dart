@@ -247,13 +247,30 @@ class _CheckInStatsScreenState extends State<CheckInStatsScreen> {
   }
 
   List<Widget> _buildRecordList(ScheduleProvider provider) {
-    final filtered = provider.checkIns
-        .where((c) =>
-            c.checkInTime.isAfter(
-                _dateRange.start.subtract(const Duration(days: 1))) &&
-            c.checkInTime.isBefore(
-                _dateRange.end.add(const Duration(days: 1))))
-        .toList();
+    // 半开区间 [startOfDay, endExclusive)，按"日程本身的日期"精确过滤
+    final startOfDay =
+        DateTime(_dateRange.start.year, _dateRange.start.month, _dateRange.start.day);
+    final endExclusive =
+        DateTime(_dateRange.end.year, _dateRange.end.month, _dateRange.end.day)
+            .add(const Duration(days: 1));
+    final scheduleById = {for (final s in provider.schedules) s.id: s};
+
+    // 取打卡归属日期：优先日程 dateTime，fallback 到 checkInTime
+    DateTime ownDateOf(CheckIn c) =>
+        scheduleById[c.scheduleId]?.dateTime ?? c.checkInTime;
+
+    final filtered = provider.checkIns.where((c) {
+      final d = ownDateOf(c);
+      return !d.isBefore(startOfDay) && d.isBefore(endExclusive);
+    }).toList()
+      // 按归属日期倒序，同一天内按打卡时间倒序
+      ..sort((a, b) {
+        final da = ownDateOf(a);
+        final db = ownDateOf(b);
+        final cmp = db.compareTo(da);
+        if (cmp != 0) return cmp;
+        return b.checkInTime.compareTo(a.checkInTime);
+      });
 
     if (filtered.isEmpty) {
       return [
@@ -274,14 +291,13 @@ class _CheckInStatsScreenState extends State<CheckInStatsScreen> {
     }
 
     return filtered.map((ci) {
-      final sched = provider.schedules.firstWhere(
-        (s) => s.id == ci.scheduleId,
-        orElse: () => Schedule(
-          id: '',
-          title: '已删除的日程',
-          dateTime: ci.checkInTime,
-        ),
-      );
+      final sched = scheduleById[ci.scheduleId] ??
+          Schedule(
+            id: '',
+            title: '已删除的日程',
+            dateTime: ci.checkInTime,
+          );
+      final ownDate = ownDateOf(ci);
       return Padding(
         padding: const EdgeInsets.only(bottom: 8),
         child: Container(
@@ -330,7 +346,7 @@ class _CheckInStatsScreenState extends State<CheckInStatsScreen> {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    DateFormat('HH:mm').format(ci.checkInTime),
+                    DateFormat('M月d日').format(ownDate),
                     style: const TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
@@ -339,11 +355,11 @@ class _CheckInStatsScreenState extends State<CheckInStatsScreen> {
                     ),
                   ),
                   Text(
-                    DateFormat('M月d日').format(ci.checkInTime),
+                    '打卡于 ${DateFormat('M/d HH:mm').format(ci.checkInTime)}',
                     style: const TextStyle(
                       fontSize: 10,
                       color: AppElegant.inkFaint,
-                      letterSpacing: 0.5,
+                      letterSpacing: 0.3,
                     ),
                   ),
                 ],

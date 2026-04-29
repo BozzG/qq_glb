@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- 应用是否追踪用户（NSPrivacyTracking）— 未跨应用追踪，设为 false -->
+	<key>NSPrivacyTracking</key>
+	<false/>
+
+	<!-- 跨应用追踪使用的域名列表（无追踪则为空） -->
+	<key>NSPrivacyTrackingDomains</key>
+	<array/>
+
+	<!-- 收集的数据类型（本 App 数据仅保存在本机，未上传云端，故为空） -->
+	<key>NSPrivacyCollectedDataTypes</key>
+	<array/>
+
+	<!-- 使用的必需原因 API（Required Reason API）声明 -->
+	<!-- 本 App 使用了：文件时间戳、本地存储、系统启动时间（第三方库也会用） -->
+	<key>NSPrivacyAccessedAPITypes</key>
+	<array>
+		<dict>
+			<key>NSPrivacyAccessedAPIType</key>
+			<string>NSPrivacyAccessedAPICategoryFileTimestamp</string>
+			<key>NSPrivacyAccessedAPITypeReasons</key>
+			<array>
+				<!-- C617.1：在 App 内部读取文件时间戳以展示本地日记/照片顺序 -->
+				<string>C617.1</string>
+			</array>
+		</dict>
+		<dict>
+			<key>NSPrivacyAccessedAPIType</key>
+			<string>NSPrivacyAccessedAPICategoryUserDefaults</string>
+			<key>NSPrivacyAccessedAPITypeReasons</key>
+			<array>
+				<!-- CA92.1：App 自身读写 UserDefaults 用于本地设置 -->
+				<string>CA92.1</string>
+			</array>
+		</dict>
+		<dict>
+			<key>NSPrivacyAccessedAPIType</key>
+			<string>NSPrivacyAccessedAPICategoryDiskSpace</string>
+			<key>NSPrivacyAccessedAPITypeReasons</key>
+			<array>
+				<!-- E174.1：在写入日记附件前检查可用磁盘空间 -->
+				<string>E174.1</string>
+			</array>
+		</dict>
+		<dict>
+			<key>NSPrivacyAccessedAPIType</key>
+			<string>NSPrivacyAccessedAPICategorySystemBootTime</string>
+			<key>NSPrivacyAccessedAPITypeReasons</key>
+			<array>
+				<!-- 35F9.1：用于计算基于启动时间的相对时间戳（第三方库常用） -->
+				<string>35F9.1</string>
+			</array>
+		</dict>
+	</array>
+</dict>
+</plist>

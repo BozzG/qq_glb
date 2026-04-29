@@ -90,88 +90,233 @@ class _CourseListScreenState extends State<CourseListScreen> {
     final hoursCtrl = TextEditingController(text: '0');
     final typeNotifier = ValueNotifier<CourseType>(CourseType.other);
 
-    await showDialog(
+    await showModalBottomSheet(
       context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('添加课程'),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              TextField(
-                controller: nameCtrl,
-                autofocus: true,
-                decoration: const InputDecoration(
-                  labelText: '课程名称',
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: hoursCtrl,
-                keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true),
-                decoration: const InputDecoration(
-                  labelText: '总课时',
-                ),
-              ),
-              const SizedBox(height: 16),
-              const Text('类型',
-                  style: TextStyle(
-                      fontSize: 11,
-                      color: AppElegant.inkSoft,
-                      letterSpacing: 2,
-                      fontWeight: FontWeight.w600)),
-              const SizedBox(height: 8),
-              ValueListenableBuilder(
-                valueListenable: typeNotifier,
-                builder: (ctx, val, _) => Wrap(
-                  spacing: 8,
-                  children: CourseType.values.map((t) {
-                    return ElegantChip(
-                      label: _typeName(t),
-                      icon: _courseIcon(t),
-                      selected: val == t,
-                      onTap: () => typeNotifier.value = t,
-                    );
-                  }).toList(),
-                ),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('取消'),
-          ),
-          FilledButton(
-            onPressed: () async {
-              if (nameCtrl.text.trim().isEmpty) return;
-              await context.read<CourseProvider>().addCourse(Course(
-                    id: const Uuid().v4(),
-                    name: nameCtrl.text.trim(),
-                    courseType: typeNotifier.value,
-                    totalHours: double.tryParse(hoursCtrl.text) ?? 0,
-                  ));
-              if (mounted) Navigator.pop(context);
-            },
-            child: const Text('添加'),
-          ),
-        ],
+      isScrollControlled: true,
+      backgroundColor: AppElegant.card,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
+      builder: (sheetCtx) {
+        return Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(sheetCtx).viewInsets.bottom,
+          ),
+          child: SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Center(child: ElegantSheetHandle()),
+                  const SizedBox(height: 16),
+                  // Hero 标题
+                  const Text(
+                    '新增课程',
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: AppElegant.inkSoft,
+                      letterSpacing: 3,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    '添加课程',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w700,
+                      color: AppElegant.ink,
+                      letterSpacing: -0.3,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Container(height: 1, width: 32, color: AppElegant.accent),
+                  const SizedBox(height: 20),
+                  // 名称
+                  _sheetLabel('课程名称'),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: nameCtrl,
+                    autofocus: true,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      color: AppElegant.ink,
+                    ),
+                    decoration: InputDecoration(
+                      hintText: '例：钢琴一对一',
+                      hintStyle: const TextStyle(
+                          color: AppElegant.inkWhisper, fontSize: 14),
+                      filled: true,
+                      fillColor: AppElegant.bgAlt,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(
+                            color: AppElegant.hair, width: 0.5),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(
+                            color: AppElegant.accent, width: 1),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 14),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  // 课时
+                  _sheetLabel('总课时'),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: hoursCtrl,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    style: const TextStyle(
+                      fontSize: 15,
+                      color: AppElegant.ink,
+                    ),
+                    decoration: InputDecoration(
+                      hintText: '0',
+                      hintStyle: const TextStyle(
+                          color: AppElegant.inkWhisper, fontSize: 14),
+                      filled: true,
+                      fillColor: AppElegant.bgAlt,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(
+                            color: AppElegant.hair, width: 0.5),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(
+                            color: AppElegant.accent, width: 1),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 14),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  // 类型
+                  _sheetLabel('类型'),
+                  const SizedBox(height: 10),
+                  ValueListenableBuilder<CourseType>(
+                    valueListenable: typeNotifier,
+                    builder: (ctx, val, _) => Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: CourseType.values.map((t) {
+                        return ElegantChip(
+                          label: _typeName(t),
+                          icon: _courseIcon(t),
+                          selected: val == t,
+                          onTap: () => typeNotifier.value = t,
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                  const SizedBox(height: 28),
+                  // 行动按钮
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () => Navigator.pop(sheetCtx),
+                          style: OutlinedButton.styleFrom(
+                            minimumSize: const Size(0, 50),
+                            side: const BorderSide(
+                                color: AppElegant.hair, width: 0.5),
+                            foregroundColor: AppElegant.ink,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                          ),
+                          child: const Text(
+                            '取消',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: 1,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        flex: 2,
+                        child: ElegantPrimaryButton(
+                          label: '添加',
+                          height: 50,
+                          onPressed: () async {
+                            if (nameCtrl.text.trim().isEmpty) {
+                              ScaffoldMessenger.of(sheetCtx).showSnackBar(
+                                const SnackBar(content: Text('请输入课程名称')),
+                              );
+                              return;
+                            }
+                            await context.read<CourseProvider>().addCourse(
+                                  Course(
+                                    id: const Uuid().v4(),
+                                    name: nameCtrl.text.trim(),
+                                    courseType: typeNotifier.value,
+                                    totalHours:
+                                        double.tryParse(hoursCtrl.text) ?? 0,
+                                  ),
+                                );
+                            if (mounted && sheetCtx.mounted) {
+                              Navigator.pop(sheetCtx);
+                            }
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
+
+  Widget _sheetLabel(String text) => Text(
+        text,
+        style: const TextStyle(
+          fontSize: 11,
+          color: AppElegant.inkSoft,
+          letterSpacing: 2,
+          fontWeight: FontWeight.w600,
+        ),
+      );
 }
 
-IconData _courseIcon(CourseType t) => t == CourseType.sports
-    ? Icons.sports_basketball_outlined
-    : t == CourseType.language
-        ? Icons.translate_outlined
-        : Icons.menu_book_outlined;
+IconData _courseIcon(CourseType t) => const {
+      CourseType.sports: Icons.sports_basketball_outlined,
+      CourseType.interest: Icons.palette_outlined,
+      CourseType.language: Icons.translate_outlined,
+      CourseType.olympiad: Icons.emoji_events_outlined,
+      CourseType.other: Icons.menu_book_outlined,
+    }[t] ??
+    Icons.menu_book_outlined;
 
-String _typeName(CourseType t) =>
-    {'sports': '运动', 'language': '语言', 'other': '其他'}[t.name] ?? '其他';
+String _typeName(CourseType t) => const {
+      'sports': '运动',
+      'interest': '兴趣',
+      'language': '语言',
+      'olympiad': '奥赛',
+      'other': '其他',
+    }[t.name] ??
+    '其他';
 
 class _CourseCard extends StatefulWidget {
   final Course course;

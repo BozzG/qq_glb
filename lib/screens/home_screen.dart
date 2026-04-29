@@ -46,6 +46,9 @@ class _HomeScreenState extends State<HomeScreen> {
         builder: (context, provider, _) {
           final day = _selectedDay ?? DateTime.now();
           final daySchedules = provider.getSchedulesForDay(day);
+          // 顶栏问候区始终展示"今天"的日程数，不随日历选中变化
+          final todayCount =
+              provider.getSchedulesForDay(DateTime.now()).length;
           return SafeArea(
             bottom: false,
             child: CustomScrollView(
@@ -53,7 +56,7 @@ class _HomeScreenState extends State<HomeScreen> {
               slivers: [
                 // ─ 顶栏（问候 + 设置按钮）─
                 SliverToBoxAdapter(
-                  child: _buildTopBar(day, daySchedules.length),
+                  child: _buildTopBar(todayCount),
                 ),
                 // ─ 日历卡片 ─
                 SliverToBoxAdapter(
@@ -156,7 +159,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // ─── 顶栏（问候 + 设置按钮）────────────────────────
-  Widget _buildTopBar(DateTime day, int scheduleCount) {
+  Widget _buildTopBar(int scheduleCount) {
     final hour = DateTime.now().hour;
     final greet = hour < 6
         ? '夜深了'

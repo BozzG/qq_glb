@@ -163,7 +163,7 @@ class Course {
   );
 }
 
-enum CourseType { sports, language, other }
+enum CourseType { sports, interest, language, olympiad, other }
 
 // ===== CourseConsumption 课时消耗 =====
 class CourseConsumption {
@@ -229,7 +229,6 @@ class GrowthLog {
   final String content;
   final List<String> imagePaths;
   final List<String> videoPaths;
-  final List<String> audioPaths;
   final Mood mood;
   final List<String> tags;
   final String? scheduleId;
@@ -238,19 +237,18 @@ class GrowthLog {
 
   GrowthLog({
     required this.id, required this.title, this.content = '',
-    List<String>? imagePaths, List<String>? videoPaths, List<String>? audioPaths,
+    List<String>? imagePaths, List<String>? videoPaths,
     this.mood = Mood.happy, List<String>? tags, this.scheduleId, DateTime? createdAt, DateTime? updatedAt,
-  }) : imagePaths = imagePaths ?? [], videoPaths = videoPaths ?? [], audioPaths = audioPaths ?? [],
+  }) : imagePaths = imagePaths ?? [], videoPaths = videoPaths ?? [],
        tags = tags ?? [], createdAt = createdAt ?? DateTime.now(), updatedAt = updatedAt ?? DateTime.now();
 
   Map<String, dynamic> toMap() => {'id': id, 'title': title, 'content': content,
     'imagePaths': jsonEncode(imagePaths), 'videoPaths': jsonEncode(videoPaths),
-    'audioPaths': jsonEncode(audioPaths), 'mood': mood.name, 'tags': jsonEncode(tags),
+    'mood': mood.name, 'tags': jsonEncode(tags),
     'scheduleId': scheduleId, 'createdAt': createdAt.toIso8601String(), 'updatedAt': updatedAt.toIso8601String()};
   factory GrowthLog.fromMap(Map<String, dynamic> m) => GrowthLog(id: m['id'], title: m['title'],
     content: m['content'] ?? '', imagePaths: (jsonDecode(m['imagePaths'] as String? ?? '[]') as List).cast<String>(),
     videoPaths: (jsonDecode(m['videoPaths'] as String? ?? '[]') as List).cast<String>(),
-    audioPaths: (jsonDecode(m['audioPaths'] as String? ?? '[]') as List).cast<String>(),
     mood: Mood.values.firstWhere((e) => e.name == m['mood'], orElse: () => Mood.happy),
     tags: (jsonDecode(m['tags'] as String? ?? '[]') as List).cast<String>(), scheduleId: m['scheduleId'],
     createdAt: DateTime.parse(m['createdAt']), updatedAt: DateTime.parse(m['updatedAt']));
@@ -271,7 +269,6 @@ class Diary {
   final String? improvementPoints;
   final List<String> imagePaths;
   final List<String> videoPaths;
-  final List<String> audioPaths;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -287,14 +284,12 @@ class Diary {
     this.improvementPoints,
     List<String>? imagePaths,
     List<String>? videoPaths,
-    List<String>? audioPaths,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) : scheduleIds = scheduleIds ?? [],
        scheduleSnapshots = scheduleSnapshots ?? [],
        imagePaths = imagePaths ?? [],
        videoPaths = videoPaths ?? [],
-       audioPaths = audioPaths ?? [],
        createdAt = createdAt ?? DateTime.now(),
        updatedAt = updatedAt ?? DateTime.now();
 
@@ -310,7 +305,6 @@ class Diary {
     'improvementPoints': improvementPoints,
     'imagePaths': jsonEncode(imagePaths),
     'videoPaths': jsonEncode(videoPaths),
-    'audioPaths': jsonEncode(audioPaths),
     'createdAt': createdAt.toIso8601String(),
     'updatedAt': updatedAt.toIso8601String(),
   };
@@ -330,7 +324,6 @@ class Diary {
     improvementPoints: m['improvementPoints'],
     imagePaths: (jsonDecode(m['imagePaths'] as String? ?? '[]') as List).cast<String>(),
     videoPaths: (jsonDecode(m['videoPaths'] as String? ?? '[]') as List).cast<String>(),
-    audioPaths: (jsonDecode(m['audioPaths'] as String? ?? '[]') as List).cast<String>(),
     createdAt: DateTime.parse(m['createdAt']),
     updatedAt: DateTime.parse(m['updatedAt']),
   );

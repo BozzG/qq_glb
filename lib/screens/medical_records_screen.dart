@@ -93,109 +93,289 @@ class _MedicalRecordsScreenState extends State<MedicalRecordsScreen> {
     final notesCtrl = TextEditingController();
     DateTime visitDate = DateTime.now();
 
-    await showDialog(
+    await showModalBottomSheet(
       context: context,
-      builder: (_) => StatefulBuilder(
-        builder: (_, setState) => AlertDialog(
-          title: const Text('添加就诊记录'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                InkWell(
-                  onTap: () async {
-                    final date = await showDatePicker(
-                      context: context,
-                      initialDate: visitDate,
-                      firstDate: DateTime(2020),
-                      lastDate: DateTime(2030),
-                    );
-                    if (date != null) setState(() => visitDate = date);
-                  },
-                  borderRadius: BorderRadius.circular(10),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 14, vertical: 12),
-                    decoration: BoxDecoration(
-                      color: AppElegant.bgAlt,
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: AppElegant.hair, width: 0.5),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.event_outlined,
-                            size: 16, color: AppElegant.inkSoft),
-                        const SizedBox(width: 10),
-                        Text(
-                          DateFormat('yyyy 年 M 月 d 日').format(visitDate),
-                          style: const TextStyle(
-                            fontSize: 14,
-                            color: AppElegant.ink,
-                            fontWeight: FontWeight.w500,
+      isScrollControlled: true,
+      backgroundColor: AppElegant.card,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (sheetCtx) {
+        return StatefulBuilder(
+          builder: (innerCtx, setInnerState) {
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(sheetCtx).viewInsets.bottom,
+              ),
+              child: SafeArea(
+                top: false,
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxHeight: MediaQuery.of(sheetCtx).size.height * 0.85,
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Center(child: ElegantSheetHandle()),
+                      const SizedBox(height: 16),
+                      // Hero 标题
+                      const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 20),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '新增就诊',
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: AppElegant.inkSoft,
+                                letterSpacing: 3,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            SizedBox(height: 8),
+                            Text(
+                              '添加就诊记录',
+                              style: TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.w700,
+                                color: AppElegant.ink,
+                                letterSpacing: -0.3,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Container(
+                            height: 1, width: 32, color: AppElegant.accent),
+                      ),
+                      const SizedBox(height: 20),
+                      Expanded(
+                        child: SingleChildScrollView(
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          physics: const BouncingScrollPhysics(),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // 日期
+                              _sheetLabel('就诊日期'),
+                              const SizedBox(height: 8),
+                              InkWell(
+                                onTap: () async {
+                                  final date = await showDatePicker(
+                                    context: innerCtx,
+                                    initialDate: visitDate,
+                                    firstDate: DateTime(2020),
+                                    lastDate: DateTime(2030),
+                                  );
+                                  if (date != null) {
+                                    setInnerState(() => visitDate = date);
+                                  }
+                                },
+                                borderRadius: BorderRadius.circular(12),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 14, vertical: 14),
+                                  decoration: BoxDecoration(
+                                    color: AppElegant.bgAlt,
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                        color: AppElegant.hair, width: 0.5),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      const Icon(Icons.event_outlined,
+                                          size: 16, color: AppElegant.inkSoft),
+                                      const SizedBox(width: 10),
+                                      Text(
+                                        DateFormat('yyyy 年 M 月 d 日')
+                                            .format(visitDate),
+                                        style: const TextStyle(
+                                          fontSize: 14,
+                                          color: AppElegant.ink,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                      const Spacer(),
+                                      const Icon(Icons.chevron_right,
+                                          size: 16,
+                                          color: AppElegant.inkWhisper),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              _sheetLabel('医院名称'),
+                              const SizedBox(height: 8),
+                              _sheetInput(
+                                controller: hospitalCtrl,
+                                hint: '例：某某医院儿科',
+                              ),
+                              const SizedBox(height: 16),
+                              _sheetLabel('医生姓名'),
+                              const SizedBox(height: 8),
+                              _sheetInput(
+                                controller: doctorCtrl,
+                                hint: '主治医生',
+                              ),
+                              const SizedBox(height: 16),
+                              _sheetLabel('诊断结果'),
+                              const SizedBox(height: 8),
+                              _sheetInput(
+                                controller: diagnosisCtrl,
+                                hint: '医生给出的诊断',
+                                maxLines: 2,
+                              ),
+                              const SizedBox(height: 16),
+                              _sheetLabel('用药 / 治疗建议'),
+                              const SizedBox(height: 8),
+                              _sheetInput(
+                                controller: medicationCtrl,
+                                hint: '用药方案、治疗建议',
+                                maxLines: 2,
+                              ),
+                              const SizedBox(height: 16),
+                              _sheetLabel('备注'),
+                              const SizedBox(height: 8),
+                              _sheetInput(
+                                controller: notesCtrl,
+                                hint: '其他需要记录的信息',
+                                maxLines: 2,
+                              ),
+                              const SizedBox(height: 16),
+                            ],
                           ),
                         ),
-                        const Spacer(),
-                        const Icon(Icons.chevron_right,
-                            size: 16, color: AppElegant.inkWhisper),
-                      ],
-                    ),
+                      ),
+                      // 底部按钮
+                      Padding(
+                        padding:
+                            const EdgeInsets.fromLTRB(20, 12, 20, 20),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: OutlinedButton(
+                                onPressed: () => Navigator.pop(sheetCtx),
+                                style: OutlinedButton.styleFrom(
+                                  minimumSize: const Size(0, 50),
+                                  side: const BorderSide(
+                                      color: AppElegant.hair, width: 0.5),
+                                  foregroundColor: AppElegant.ink,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(14),
+                                  ),
+                                ),
+                                child: const Text(
+                                  '取消',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    letterSpacing: 1,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              flex: 2,
+                              child: ElegantPrimaryButton(
+                                label: '保存',
+                                height: 50,
+                                onPressed: () async {
+                                  if (hospitalCtrl.text.trim().isEmpty &&
+                                      diagnosisCtrl.text.trim().isEmpty) {
+                                    ScaffoldMessenger.of(sheetCtx)
+                                        .showSnackBar(
+                                      const SnackBar(
+                                          content: Text('请至少填写医院或诊断')),
+                                    );
+                                    return;
+                                  }
+                                  await context
+                                      .read<MedicalProvider>()
+                                      .addRecord(
+                                        MedicalRecord(
+                                          id: const Uuid().v4(),
+                                          hospitalName:
+                                              hospitalCtrl.text.trim(),
+                                          doctorName: doctorCtrl.text.trim(),
+                                          diagnosis:
+                                              diagnosisCtrl.text.trim(),
+                                          medication:
+                                              medicationCtrl.text.trim(),
+                                          notes: notesCtrl.text.trim(),
+                                          visitDate: visitDate,
+                                        ),
+                                      );
+                                  if (mounted && sheetCtx.mounted) {
+                                    Navigator.pop(sheetCtx);
+                                  }
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: hospitalCtrl,
-                  decoration: const InputDecoration(labelText: '医院名称'),
-                ),
-                const SizedBox(height: 10),
-                TextField(
-                  controller: doctorCtrl,
-                  decoration: const InputDecoration(labelText: '医生姓名'),
-                ),
-                const SizedBox(height: 10),
-                TextField(
-                  controller: diagnosisCtrl,
-                  maxLines: 2,
-                  decoration: const InputDecoration(labelText: '诊断结果'),
-                ),
-                const SizedBox(height: 10),
-                TextField(
-                  controller: medicationCtrl,
-                  maxLines: 2,
-                  decoration: const InputDecoration(labelText: '用药 / 治疗建议'),
-                ),
-                const SizedBox(height: 10),
-                TextField(
-                  controller: notesCtrl,
-                  maxLines: 2,
-                  decoration: const InputDecoration(labelText: '备注'),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('取消'),
-            ),
-            FilledButton(
-              onPressed: () async {
-                await context.read<MedicalProvider>().addRecord(
-                      MedicalRecord(
-                        id: const Uuid().v4(),
-                        hospitalName: hospitalCtrl.text.trim(),
-                        doctorName: doctorCtrl.text.trim(),
-                        diagnosis: diagnosisCtrl.text.trim(),
-                        medication: medicationCtrl.text.trim(),
-                        notes: notesCtrl.text.trim(),
-                        visitDate: visitDate,
-                      ),
-                    );
-                if (mounted) Navigator.pop(context);
-              },
-              child: const Text('保存'),
-            ),
-          ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _sheetLabel(String text) => Text(
+        text,
+        style: const TextStyle(
+          fontSize: 11,
+          color: AppElegant.inkSoft,
+          letterSpacing: 2,
+          fontWeight: FontWeight.w600,
         ),
+      );
+
+  Widget _sheetInput({
+    required TextEditingController controller,
+    required String hint,
+    int maxLines = 1,
+  }) {
+    return TextField(
+      controller: controller,
+      maxLines: maxLines,
+      style: const TextStyle(
+        fontSize: 15,
+        color: AppElegant.ink,
+        height: 1.5,
+      ),
+      decoration: InputDecoration(
+        hintText: hint,
+        hintStyle:
+            const TextStyle(color: AppElegant.inkWhisper, fontSize: 14),
+        filled: true,
+        fillColor: AppElegant.bgAlt,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide:
+              const BorderSide(color: AppElegant.hair, width: 0.5),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide:
+              const BorderSide(color: AppElegant.accent, width: 1),
+        ),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
       ),
     );
   }

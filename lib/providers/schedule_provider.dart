@@ -315,15 +315,30 @@ class ScheduleProvider with ChangeNotifier {
     }
   }
 
-  // 获取打卡统计
+  // 获取打卡统计（按日程本身的日期归档，而非打卡操作时间）
+  // 对于已删除的日程，fallback 使用 checkInTime
   Map<String, dynamic> getCheckInStats({required DateTime start, required DateTime end}) {
-    final filtered = _checkIns.where((c) =>
-        c.checkInTime.isAfter(start.subtract(Duration(days: 1))) &&
-        c.checkInTime.isBefore(end.add(Duration(days: 1)))).toList();
+    final startOfDay = DateTime(start.year, start.month, start.day);
+    // 次日 00:00，用半开区间 [startOfDay, endExclusive) 过滤
+    final endExclusive = DateTime(end.year, end.month, end.day).add(const Duration(days: 1));
+
+    // 为每条打卡解析其"归属日期"：优先日程自身的 dateTime，找不到则用 checkInTime
+    final scheduleById = {for (final s in _schedules) s.id: s};
+    DateTime ownDateOf(CheckIn c) {
+      final s = scheduleById[c.scheduleId];
+      return s?.dateTime ?? c.checkInTime;
+    }
+
+    final filtered = _checkIns.where((c) {
+      final d = ownDateOf(c);
+      return !d.isBefore(startOfDay) && d.isBefore(endExclusive);
+    }).toList();
 
     Map<String, int> dailyCounts = {};
     for (var ci in filtered) {
-      final key = '${ci.checkInTime.year}-${ci.checkInTime.month.toString().padLeft(2, "0")}-${ci.checkInTime.day.toString().padLeft(2, "0")}';
+      final d = ownDateOf(ci);
+      final key =
+          '${d.year}-${d.month.toString().padLeft(2, "0")}-${d.day.toString().padLeft(2, "0")}';
       dailyCounts[key] = (dailyCounts[key] ?? 0) + 1;
     }
 

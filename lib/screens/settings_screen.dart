@@ -109,7 +109,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
       child: Column(
         children: [
           const ElegantCardHeader(
-              icon: Icons.notifications_none_rounded, label: '通知'),
+            icon: Icons.notifications_none_rounded,
+            label: '通知',
+          ),
           const SizedBox(height: 6),
           ElegantRowTile(
             label: '开启通知提醒',
@@ -118,14 +120,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
               onChanged: (v) async {
                 HapticFeedback.selectionClick();
                 if (v) {
-                  final granted =
-                      await _notificationService.requestPermission();
+                  final granted = await _notificationService
+                      .requestPermission();
                   if (!granted) {
                     if (!mounted) return;
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('请在系统设置中允许通知权限'),
-                      ),
+                      const SnackBar(content: Text('请在系统设置中允许通知权限')),
                     );
                     return;
                   }
@@ -138,8 +138,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   if (provider.schedules.isEmpty) {
                     await provider.loadSchedules();
                   }
-                  await _notificationService
-                      .rescheduleAll(provider.schedules);
+                  await _notificationService.rescheduleAll(provider.schedules);
                 }
               },
             ),
@@ -196,17 +195,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       if (provider.schedules.isEmpty) {
                         await provider.loadSchedules();
                       }
-                      await _notificationService
-                          .rescheduleAll(provider.schedules);
+                      await _notificationService.rescheduleAll(
+                        provider.schedules,
+                      );
                     },
                     borderRadius: BorderRadius.circular(12),
                     child: Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 14, vertical: 14),
+                        horizontal: 14,
+                        vertical: 14,
+                      ),
                       decoration: BoxDecoration(
-                        color: selected
-                            ? AppElegant.accent
-                            : AppElegant.bgAlt,
+                        color: selected ? AppElegant.accent : AppElegant.bgAlt,
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Row(
@@ -215,9 +215,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             '$m 分钟前',
                             style: TextStyle(
                               fontSize: 14,
-                              color: selected
-                                  ? Colors.white
-                                  : AppElegant.ink,
+                              color: selected ? Colors.white : AppElegant.ink,
                               fontWeight: selected
                                   ? FontWeight.w600
                                   : FontWeight.w500,
@@ -225,8 +223,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           ),
                           const Spacer(),
                           if (selected)
-                            const Icon(Icons.check_rounded,
-                                color: Colors.white, size: 18),
+                            const Icon(
+                              Icons.check_rounded,
+                              color: Colors.white,
+                              size: 18,
+                            ),
                         ],
                       ),
                     ),
@@ -247,7 +248,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const ElegantCardHeader(
-              icon: Icons.info_outline_rounded, label: '关于应用'),
+            icon: Icons.info_outline_rounded,
+            label: '关于应用',
+          ),
           const SizedBox(height: 16),
           const Text(
             "Qianqian's Growth Logbook",
@@ -259,10 +262,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
           const SizedBox(height: 4),
-          const Text(
-            '芊芊成长日志 · v1.0.0',
-            style: AppText.meta,
-          ),
+          const Text('芊芊成长日志 · v2.0.0', style: AppText.meta),
           const SizedBox(height: 14),
           const Text(
             '专为记录孩子成长而设计的 APP，帮助家长全面、系统地跟踪孩子的成长历程，为孩子打造一份独特的成长日志。',
@@ -273,13 +273,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const SizedBox(height: 14),
           Row(
             children: [
-              const Icon(Icons.mail_outline_rounded,
-                  size: 14, color: AppElegant.inkSoft),
-              const SizedBox(width: 8),
-              const Text(
-                'bozzguo@qq.com',
-                style: AppText.meta,
+              const Icon(
+                Icons.mail_outline_rounded,
+                size: 14,
+                color: AppElegant.inkSoft,
               ),
+              const SizedBox(width: 8),
+              const Text('bozzguo@qq.com', style: AppText.meta),
               const Spacer(),
               Text(
                 'CONTACT',
@@ -304,7 +304,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const ElegantCardHeader(
-              icon: Icons.warning_amber_rounded, label: '数据'),
+            icon: Icons.warning_amber_rounded,
+            label: '数据',
+          ),
           const SizedBox(height: 14),
           InkWell(
             onTap: _showResetConfirm,
@@ -313,8 +315,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
               padding: const EdgeInsets.symmetric(vertical: 12),
               child: Row(
                 children: [
-                  const Icon(Icons.restart_alt_rounded,
-                      size: 18, color: AppElegant.rose),
+                  const Icon(
+                    Icons.restart_alt_rounded,
+                    size: 18,
+                    color: AppElegant.rose,
+                  ),
                   const SizedBox(width: 10),
                   const Expanded(
                     child: Text(
@@ -326,17 +331,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                     ),
                   ),
-                  const Icon(Icons.chevron_right,
-                      size: 16, color: AppElegant.inkWhisper),
+                  const Icon(
+                    Icons.chevron_right,
+                    size: 16,
+                    color: AppElegant.inkWhisper,
+                  ),
                 ],
               ),
             ),
           ),
           const SizedBox(height: 4),
-          const Text(
-            '清空日程、日记、医疗、课程与打卡数据。此操作不可撤销。',
-            style: AppText.meta,
-          ),
+          const Text('清空日程、日记、医疗、课程与打卡数据。此操作不可撤销。', style: AppText.meta),
         ],
       ),
     );
@@ -354,9 +359,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: const Text('取消'),
           ),
           FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: AppElegant.rose,
-            ),
+            style: FilledButton.styleFrom(backgroundColor: AppElegant.rose),
             onPressed: () async {
               Navigator.pop(context);
               try {
@@ -371,14 +374,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 if (!mounted) return;
                 await context.read<MedicalProvider>().loadRecords();
                 if (!mounted) return;
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('所有数据已重置')),
-                );
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(const SnackBar(content: Text('所有数据已重置')));
               } catch (e) {
                 if (!mounted) return;
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('重置失败：$e')),
-                );
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(SnackBar(content: Text('重置失败：$e')));
               }
             },
             child: const Text('确认重置'),

@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:file_picker/file_picker.dart';
 import 'dart:io';
 import '../models/models.dart';
 import '../providers/diary_provider.dart';
@@ -37,7 +36,6 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
 
   List<String> _imagePaths = [];
   List<String> _videoPaths = [];
-  List<String> _audioPaths = [];
 
   bool get _isEditing => widget.diary != null;
   bool get _readOnly => widget.readOnly;
@@ -57,7 +55,6 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
 
     _imagePaths = List.from(widget.diary?.imagePaths ?? []);
     _videoPaths = List.from(widget.diary?.videoPaths ?? []);
-    _audioPaths = List.from(widget.diary?.audioPaths ?? []);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadSchedulesForDate();
@@ -136,7 +133,6 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
             : null,
         imagePaths: _imagePaths,
         videoPaths: _videoPaths,
-        audioPaths: _audioPaths,
         createdAt: widget.diary!.createdAt,
         updatedAt: now,
       ));
@@ -159,7 +155,6 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
             : null,
         imagePaths: _imagePaths,
         videoPaths: _videoPaths,
-        audioPaths: _audioPaths,
         createdAt: now,
         updatedAt: now,
       ));
@@ -708,7 +703,7 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
                     max: 5,
                     onTap:
                         _readOnly ? null : () => _pickMedia('image'))),
-            const SizedBox(width: 8),
+            const SizedBox(width: 10),
             Expanded(
                 child: _mediaTile(
                     icon: Icons.videocam_outlined,
@@ -717,15 +712,6 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
                     max: 2,
                     onTap:
                         _readOnly ? null : () => _pickMedia('video'))),
-            const SizedBox(width: 8),
-            Expanded(
-                child: _mediaTile(
-                    icon: Icons.mic_none_outlined,
-                    label: '音频',
-                    count: _audioPaths.length,
-                    max: 3,
-                    onTap:
-                        _readOnly ? null : () => _pickMedia('audio'))),
           ],
         ),
         if (_imagePaths.isNotEmpty) ...[
@@ -735,10 +721,6 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
         if (_videoPaths.isNotEmpty) ...[
           const SizedBox(height: 14),
           _mediaPreview('video'),
-        ],
-        if (_audioPaths.isNotEmpty) ...[
-          const SizedBox(height: 14),
-          _mediaPreview('audio'),
         ],
       ],
     );
@@ -799,17 +781,11 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
       _showSnack('最多添加 2 个视频');
       return;
     }
-    if (type == 'audio' && _audioPaths.length >= 3) {
-      _showSnack('最多添加 3 个音频');
-      return;
-    }
     try {
       if (type == 'image') {
         await _pickImages();
       } else if (type == 'video') {
         await _pickVideo();
-      } else if (type == 'audio') {
-        await _pickAudio();
       }
     } catch (e) {
       if (mounted) _showSnack('选择失败：$e');
@@ -922,71 +898,14 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
     );
   }
 
-  Future<void> _pickAudio() async {
-    final result = await FilePicker.platform.pickFiles(
-      type: FileType.audio,
-      allowMultiple: true,
-    );
-    if (result != null && mounted) {
-      final remaining = 3 - _audioPaths.length;
-      final add =
-          result.files.length > remaining ? remaining : result.files.length;
-      setState(() {
-        for (var i = 0; i < add; i++) {
-          if (result.files[i].path != null) {
-            _audioPaths.add(result.files[i].path!);
-          }
-        }
-      });
-    }
-  }
-
   void _removeMedia(String type, String path) {
     setState(() {
       if (type == 'image') _imagePaths.remove(path);
       if (type == 'video') _videoPaths.remove(path);
-      if (type == 'audio') _audioPaths.remove(path);
     });
   }
 
   Widget _mediaPreview(String type) {
-    if (type == 'audio') {
-      return Column(
-        children: _audioPaths.map((path) {
-          final name = path.split('/').last;
-          return Container(
-            margin: const EdgeInsets.only(bottom: 6),
-            padding:
-                const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-            decoration: BoxDecoration(
-              color: AppElegant.bgAlt,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.mic_rounded,
-                    size: 14, color: AppElegant.inkSoft),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppText.meta,
-                  ),
-                ),
-                if (!_readOnly)
-                  GestureDetector(
-                    onTap: () => _removeMedia('audio', path),
-                    child: const Icon(Icons.close_rounded,
-                        size: 14, color: AppElegant.rose),
-                  ),
-              ],
-            ),
-          );
-        }).toList(),
-      );
-    }
     final paths = type == 'image' ? _imagePaths : _videoPaths;
     return Wrap(
       spacing: 8,

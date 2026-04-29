@@ -147,7 +147,6 @@ class DatabaseHelper {
         content TEXT,
         imagePaths TEXT,     -- JSON array
         videoPaths TEXT,     -- JSON array
-        audioPaths TEXT,     -- JSON array
         mood TEXT,           -- happy, sad, excited, etc.
         tags TEXT,           -- JSON array
         scheduleId TEXT,     -- 关联的日程
@@ -170,7 +169,6 @@ class DatabaseHelper {
         improvementPoints TEXT,
         imagePaths TEXT,
         videoPaths TEXT,
-        audioPaths TEXT,
         createdAt TEXT NOT NULL,
         updatedAt TEXT
       )
@@ -296,7 +294,6 @@ class DatabaseHelper {
           improvementPoints TEXT,
           imagePaths TEXT,
           videoPaths TEXT,
-          audioPaths TEXT,
           createdAt TEXT NOT NULL,
           updatedAt TEXT
         )
