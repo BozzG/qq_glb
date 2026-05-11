@@ -45,13 +45,17 @@ class CourseProvider with ChangeNotifier {
   }
 
   // 手动调整课时
+  // 注意：adjustment 表示"已用课时"的变化量（正数=已用增加=剩余减少）
   Future<void> adjustHours(String courseId, double adjustment, {String? note}) async {
     final consumption = CourseConsumption(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       courseId: courseId,
       consumedAmount: adjustment,
       consumptionType: ConsumptionType.manual,
-      note: note ?? (adjustment > 0 ? '手动增加课时' : '手动扣减课时'),
+      // adjustment > 0 → 已用增加 → 对用户视角是"扣减剩余"
+      note: note?.isNotEmpty == true
+          ? note
+          : (adjustment > 0 ? '手动扣减课时' : '手动增加课时'),
     );
     await _db.insert('course_consumptions', consumption.toMap());
     

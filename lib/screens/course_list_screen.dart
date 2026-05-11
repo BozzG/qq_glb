@@ -554,10 +554,11 @@ class _CourseCardState extends State<_CourseCard> {
           children: [
             TextField(
               controller: amountCtrl,
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
+              // 使用默认全键盘（可直接输入 +/-），配合下方格式校验
+              keyboardType: TextInputType.text,
               decoration: const InputDecoration(
-                labelText: '数量（+增加 / -减少）',
+                labelText: '数量（+ 增加剩余 / - 减少剩余）',
+                hintText: '例：+2 或 -1',
               ),
             ),
             const SizedBox(height: 12),
@@ -575,9 +576,30 @@ class _CourseCardState extends State<_CourseCard> {
               child: const Text('取消')),
           FilledButton(
             onPressed: () async {
+              final raw = amountCtrl.text.trim();
+              // 空输入：静默关闭
+              if (raw.isEmpty) {
+                Navigator.pop(context);
+                return;
+              }
+              // 格式校验：允许可选前缀 + 或 -，整数或小数（如 "1"、"+2"、"-1.5"、".5"）
+              final pattern = RegExp(r'^[+-]?(\d+\.?\d*|\.\d+)$');
+              final delta = double.tryParse(raw);
+              if (!pattern.hasMatch(raw) || delta == null) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('请输入有效的数字，例如 +2 或 -1.5')),
+                );
+                return;
+              }
+              if (delta == 0) {
+                Navigator.pop(context);
+                return;
+              }
+              // 用户输入的是"剩余课时的变化量"，底层 adjustHours 改的是
+              // "已用课时"（方向相反），所以传入前取反
               await context.read<CourseProvider>().adjustHours(
                     widget.course.id,
-                    double.tryParse(amountCtrl.text) ?? 0,
+                    -delta,
                     note: noteCtrl.text.trim(),
                   );
               if (mounted) Navigator.pop(context);
