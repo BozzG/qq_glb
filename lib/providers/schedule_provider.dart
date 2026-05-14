@@ -255,13 +255,11 @@ class ScheduleProvider with ChangeNotifier {
         .toList();
   }
 
-  // 打卡（每个日程实例独立）
+  // 打卡（每个日程实例独立，以日程自身 dateTime 为归属日）
   Future<bool> checkIn(String scheduleId, {String? notes}) async {
     try {
-      final today = DateTime.now();
-      final alreadyChecked = _checkIns.any((c) =>
-          c.scheduleId == scheduleId &&
-          isSameDay(c.checkInTime, today));
+      // 同一日程实例只允许打卡一次（日程本身已锁定到具体某天）
+      final alreadyChecked = _checkIns.any((c) => c.scheduleId == scheduleId);
       if (alreadyChecked) return false;
 
       final checkIn = CheckIn(
@@ -289,14 +287,15 @@ class ScheduleProvider with ChangeNotifier {
     }
   }
 
-  bool isCheckedToday(String scheduleId) {
-    final today = DateTime.now();
-    return _checkIns.any((c) =>
-        c.scheduleId == scheduleId &&
-        c.checkInTime.year == today.year &&
-        c.checkInTime.month == today.month &&
-        c.checkInTime.day == today.day);
+  /// 判断某个日程实例是否已打卡
+  /// 由于每个日程实例都绑定到具体某一天（包括重复日程的独立实例），
+  /// 该实例一旦有任一条 check_in 记录，就视为已打卡。
+  bool isCheckedIn(String scheduleId) {
+    return _checkIns.any((c) => c.scheduleId == scheduleId);
   }
+
+  /// 向后兼容：保留旧方法名，语义等同 isCheckedIn
+  bool isCheckedToday(String scheduleId) => isCheckedIn(scheduleId);
 
   Future<void> _deductCourseHours(String courseId, String checkInId, double amount) async {
     final consumption = CourseConsumption(

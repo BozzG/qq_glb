@@ -122,7 +122,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           padding: const EdgeInsets.only(bottom: 10),
                           child: _ScheduleCard(
                             schedule: daySchedules[index],
-                            isCheckedIn: provider.isCheckedToday(
+                            isCheckedIn: provider.isCheckedIn(
                               daySchedules[index].id,
                             ),
                             onTap: () => Navigator.push(
@@ -139,7 +139,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               );
                               if (!success && mounted) {
                                 ScaffoldMessenger.of(ctx).showSnackBar(
-                                  const SnackBar(content: Text('今天已经打卡过啦')),
+                                  const SnackBar(content: Text('这条日程已经打过卡啦')),
                                 );
                               }
                             },

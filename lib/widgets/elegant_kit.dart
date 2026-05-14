@@ -63,9 +63,7 @@ class ElegantNavBar extends StatelessWidget {
                     )
                   : const SizedBox(width: 40)),
           Expanded(
-            child: Center(
-              child: Text(title, style: AppText.navTitle),
-            ),
+            child: Center(child: Text(title, style: AppText.navTitle)),
           ),
           if (actions != null) ...actions! else const SizedBox(width: 40),
         ],
@@ -178,7 +176,7 @@ class ElegantCardHeader extends StatelessWidget {
         ],
         Text(label, style: AppText.caption),
         const Spacer(),
-        if (trailing != null) trailing!,
+        ?trailing,
       ],
     );
   }
@@ -229,10 +227,7 @@ class ElegantRowTile extends StatelessWidget {
           ],
           Text(
             label,
-            style: const TextStyle(
-              fontSize: 13,
-              color: AppElegant.inkSoft,
-            ),
+            style: const TextStyle(fontSize: 13, color: AppElegant.inkSoft),
           ),
           const Spacer(),
           if (value != null)
@@ -244,11 +239,14 @@ class ElegantRowTile extends StatelessWidget {
                 color: AppElegant.ink,
               ),
             ),
-          if (trailing != null) trailing!,
+          ?trailing,
           if (onTap != null) ...[
             const SizedBox(width: 6),
-            const Icon(Icons.chevron_right,
-                size: 16, color: AppElegant.inkWhisper),
+            const Icon(
+              Icons.chevron_right,
+              size: 16,
+              color: AppElegant.inkWhisper,
+            ),
           ],
         ],
       ),
@@ -307,8 +305,7 @@ class ElegantChip extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             if (icon != null) ...[
-              Icon(icon,
-                  size: 14, color: selected ? acc : AppElegant.inkSoft),
+              Icon(icon, size: 14, color: selected ? acc : AppElegant.inkSoft),
               const SizedBox(width: 6),
             ],
             Text(
@@ -498,8 +495,7 @@ class ElegantEmpty extends StatelessWidget {
                 color: AppElegant.bgAlt,
                 shape: BoxShape.circle,
               ),
-              child:
-                  Icon(icon, size: 28, color: AppElegant.inkFaint),
+              child: Icon(icon, size: 28, color: AppElegant.inkFaint),
             ),
             const SizedBox(height: 16),
             Text(
@@ -520,10 +516,7 @@ class ElegantEmpty extends StatelessWidget {
                 ),
               ),
             ],
-            if (action != null) ...[
-              const SizedBox(height: 16),
-              action!,
-            ],
+            if (action != null) ...[const SizedBox(height: 16), action!],
           ],
         ),
       ),
@@ -623,12 +616,7 @@ class ElegantBadge extends StatelessWidget {
   final Color? color;
   final IconData? icon;
 
-  const ElegantBadge({
-    super.key,
-    required this.text,
-    this.color,
-    this.icon,
-  });
+  const ElegantBadge({super.key, required this.text, this.color, this.icon});
 
   @override
   Widget build(BuildContext context) {
