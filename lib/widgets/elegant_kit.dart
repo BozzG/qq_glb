@@ -176,7 +176,7 @@ class ElegantCardHeader extends StatelessWidget {
         ],
         Text(label, style: AppText.caption),
         const Spacer(),
-        ?trailing,
+        if (trailing != null) trailing!,
       ],
     );
   }
@@ -239,7 +239,7 @@ class ElegantRowTile extends StatelessWidget {
                 color: AppElegant.ink,
               ),
             ),
-          ?trailing,
+          if (trailing != null) trailing!,
           if (onTap != null) ...[
             const SizedBox(width: 6),
             const Icon(
