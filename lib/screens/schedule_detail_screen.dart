@@ -7,6 +7,7 @@ import '../providers/schedule_provider.dart';
 import '../utils/app_theme.dart';
 import '../widgets/elegant_kit.dart';
 import 'add_schedule_screen.dart';
+import 'edit_recurring_rule_screen.dart';
 
 class ScheduleDetailScreen extends StatefulWidget {
   final Schedule schedule;
@@ -68,6 +69,9 @@ class _ScheduleDetailScreenState extends State<ScheduleDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final color = _schedule.color;
+    // 仅当属于重复组时渲染"修改重复规则"按钮（PRD AC-01 / AC-02）
+    final isRecurring = _schedule.repeatTemplateId != null &&
+        _schedule.repeatType != RepeatType.none;
     return Scaffold(
       backgroundColor: AppElegant.bg,
       body: Stack(
@@ -81,20 +85,42 @@ class _ScheduleDetailScreenState extends State<ScheduleDetailScreen> {
                     ElegantCircleIconButton(
                       icon: Icons.edit_outlined,
                       onTap: () async {
-                        final result = await Navigator.push(
-                          context,
+                        final navigator = Navigator.of(context);
+                        final provider = context.read<ScheduleProvider>();
+                        final result = await navigator.push(
                           MaterialPageRoute(
                             builder: (_) =>
                                 AddScheduleScreen(editSchedule: _schedule),
                           ),
                         );
-                        if (result == true && mounted) {
-                          context.read<ScheduleProvider>().loadSchedules();
-                          Navigator.pop(context);
-                        }
+                        if (result != true) return;
+                        if (!mounted) return;
+                        provider.loadSchedules();
+                        navigator.pop();
                       },
                     ),
                     const SizedBox(width: 10),
+                    if (isRecurring) ...[
+                      ElegantCircleIconButton(
+                        icon: Icons.event_repeat_outlined,
+                        onTap: () async {
+                          final navigator = Navigator.of(context);
+                          final provider = context.read<ScheduleProvider>();
+                          final result = await navigator.push(
+                            MaterialPageRoute(
+                              builder: (_) => EditRecurringRuleScreen(
+                                seed: _schedule,
+                              ),
+                            ),
+                          );
+                          if (result != true) return;
+                          if (!mounted) return;
+                          provider.loadSchedules();
+                          navigator.pop();
+                        },
+                      ),
+                      const SizedBox(width: 10),
+                    ],
                     ElegantCircleIconButton(
                       icon: Icons.delete_outline,
                       onTap: _showDeleteConfirm,

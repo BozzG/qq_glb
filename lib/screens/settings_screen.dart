@@ -262,7 +262,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
           const SizedBox(height: 4),
-          const Text('芊芊成长日志 · v2.1.0', style: AppText.meta),
+          const Text('芊芊成长日志 · v2.2.0', style: AppText.meta),
           const SizedBox(height: 14),
           const Text(
             '专为记录孩子成长而设计的 APP，帮助家长全面、系统地跟踪孩子的成长历程，为孩子打造一份独特的成长日志。',
