@@ -23,7 +23,7 @@ class TodayOverviewScreen extends StatelessWidget {
 
     final todaySchedules = scheduleProvider.getSchedulesForDay(now);
     final todayCheckInCount = todaySchedules
-        .where((s) => scheduleProvider.isCheckedToday(s.id))
+        .where((s) => scheduleProvider.isCheckedIn(s.id))
         .length;
     final todayMedicals = medicalProvider.records
         .where((r) =>
@@ -107,7 +107,7 @@ class TodayOverviewScreen extends StatelessWidget {
                               child: _ScheduleLine(
                                 schedule: s,
                                 isChecked:
-                                    scheduleProvider.isCheckedToday(s.id),
+                                    scheduleProvider.isCheckedIn(s.id),
                               ),
                             )),
                       const SizedBox(height: 28),

@@ -34,7 +34,7 @@ class DatabaseHelper {
     if (isTestMode) {
       final db = await openDatabase(
         inMemoryDatabasePath,
-        version: 3,
+        version: 4,
         onCreate: _onCreate,
         onUpgrade: _onUpgrade,
       );
@@ -52,7 +52,7 @@ class DatabaseHelper {
     }
     return await openDatabase(
       dbPath,
-      version: 3,
+      version: 4,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -73,6 +73,7 @@ class DatabaseHelper {
         scheduleType TEXT, -- nursery, sports, language, medical, school, general
         isCourse INTEGER DEFAULT 0,
         courseId TEXT,
+        courseHours REAL DEFAULT 1,
         memo TEXT,
         parentId TEXT,
         repeatTemplateId TEXT,
@@ -299,6 +300,13 @@ class DatabaseHelper {
         )
       ''');
     }
+
+    if (oldVersion < 4) {
+      // v3 → v4: 日程新增 courseHours 列（每次打卡消耗的课时数，默认 1）
+      // 旧数据自动取默认值 1，与原「固定扣 1 课时」行为一致，零数据丢失。
+      await db.execute(
+          'ALTER TABLE schedules ADD COLUMN courseHours REAL DEFAULT 1');
+    }
   }
   
   // 通用CRUD操作
@@ -339,6 +347,54 @@ class DatabaseHelper {
     });
   }
 
+  /// 业务数据表清单（用于整库备份/恢复，顺序固定以保证可重复性）
+  static const List<String> allTables = [
+    'schedules',
+    'check_ins',
+    'courses',
+    'course_consumptions',
+    'medical_records',
+    'growth_logs',
+    'diaries',
+    'app_settings',
+  ];
+
+  /// 导出全部业务表为 {表名: [行...]} 结构（用于数据备份）。
+  Future<Map<String, List<Map<String, dynamic>>>> exportAllTables() async {
+    final db = await database;
+    final result = <String, List<Map<String, dynamic>>>{};
+    for (final table in allTables) {
+      final rows = await db.query(table);
+      // db.query 返回只读 Map，转为可序列化的普通 Map
+      result[table] = rows.map((r) => Map<String, dynamic>.from(r)).toList();
+    }
+    return result;
+  }
+
+  /// 整库恢复：单事务内清空全部表并按传入数据重建，返回每张表写入的行数。
+  /// 失败将整体回滚，保证数据一致性。
+  Future<Map<String, int>> importAll(
+    Map<String, List<Map<String, dynamic>>> data,
+  ) async {
+    final db = await database;
+    final counts = <String, int>{};
+    await db.transaction((txn) async {
+      for (final table in allTables) {
+        await txn.delete(table);
+        final rows = data[table] ?? const [];
+        for (final row in rows) {
+          await txn.insert(
+            table,
+            row,
+            conflictAlgorithm: ConflictAlgorithm.replace,
+          );
+        }
+        counts[table] = rows.length;
+      }
+    });
+    return counts;
+  }
+
   /// 判断两个DateTime是否是同一天
   static bool isSameDay(DateTime a, DateTime b) =>
       a.year == b.year && a.month == b.month && a.day == b.day;
@@ -358,6 +414,6 @@ class DatabaseHelper {
     for (final table in tables) {
       await db.execute('DROP TABLE IF EXISTS $table');
     }
-    await _onCreate(db, 3);
+    await _onCreate(db, 4);
   }
 }

@@ -5,6 +5,7 @@ import '../utils/app_theme.dart';
 import '../widgets/elegant_kit.dart';
 import '../services/notification_service.dart';
 import '../services/database_helper.dart';
+import '../services/backup_service.dart';
 import '../providers/schedule_provider.dart';
 import '../providers/course_provider.dart';
 import '../providers/diary_provider.dart';
@@ -46,6 +47,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   _buildNotificationCard(),
                   const SizedBox(height: 16),
                   _buildAboutCard(),
+                  const SizedBox(height: 16),
+                  _buildBackupCard(),
                   const SizedBox(height: 16),
                   _buildDangerCard(),
                 ],
@@ -262,7 +265,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
           const SizedBox(height: 4),
-          const Text('芊芊成长日志 · v2.2.0', style: AppText.meta),
+          const Text('芊芊成长日志 · v2.3.0', style: AppText.meta),
           const SizedBox(height: 14),
           const Text(
             '专为记录孩子成长而设计的 APP，帮助家长全面、系统地跟踪孩子的成长历程，为孩子打造一份独特的成长日志。',
@@ -295,6 +298,87 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ],
       ),
     );
+  }
+
+  // ─── 数据备份 ─────────────────────────────
+  Widget _buildBackupCard() {
+    return ElegantCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const ElegantCardHeader(
+            icon: Icons.cloud_sync_outlined,
+            label: '数据备份',
+          ),
+          const SizedBox(height: 6),
+          ElegantRowTile(
+            leading: Icons.ios_share_rounded,
+            label: '导出备份',
+            onTap: _handleExport,
+          ),
+          const ElegantDivider(),
+          ElegantRowTile(
+            leading: Icons.settings_backup_restore_rounded,
+            label: '从备份恢复',
+            onTap: _handleImport,
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            '导出后请妥善保存备份文件；恢复将以备份内容覆盖当前全部数据。',
+            style: AppText.meta,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _handleExport() async {
+    try {
+      await BackupService().exportAndShare();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('导出失败：$e')),
+      );
+    }
+  }
+
+  Future<void> _handleImport() async {
+    final confirmed = await ElegantConfirmDialog.confirmDelete(
+      context,
+      title: '从备份恢复',
+      message: '恢复将以所选备份覆盖当前全部数据，且不可撤销。确定继续吗？',
+      confirmLabel: '选择备份文件',
+      icon: Icons.settings_backup_restore_rounded,
+    );
+    if (!confirmed || !mounted) return;
+    try {
+      final result = await BackupService().importFromPickedFile();
+      if (!mounted || result.cancelled) return;
+      await _notificationService.cancelAll();
+      if (!mounted) return;
+      final scheduleProvider = context.read<ScheduleProvider>();
+      await scheduleProvider.loadSchedules();
+      if (!mounted) return;
+      await context.read<CourseProvider>().loadCourses();
+      if (!mounted) return;
+      await context.read<DiaryProvider>().loadDiaries();
+      if (!mounted) return;
+      await context.read<MedicalProvider>().loadRecords();
+      if (!mounted) return;
+      if (_notificationService.enabled) {
+        await _notificationService.rescheduleAll(scheduleProvider.schedules);
+      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('已恢复 ${result.total} 条数据')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('恢复失败：$e')),
+      );
+    }
   }
 
   // ─── 危险操作 ─────────────────────────────
@@ -347,47 +431,35 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  void _showResetConfirm() {
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('确认重置'),
-        content: const Text('确定要清空所有数据吗？此操作不可恢复。'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('取消'),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: AppElegant.rose),
-            onPressed: () async {
-              Navigator.pop(context);
-              try {
-                await DatabaseHelper().resetAll();
-                await _notificationService.cancelAll();
-                if (!mounted) return;
-                await context.read<ScheduleProvider>().loadSchedules();
-                if (!mounted) return;
-                await context.read<CourseProvider>().loadCourses();
-                if (!mounted) return;
-                await context.read<DiaryProvider>().loadDiaries();
-                if (!mounted) return;
-                await context.read<MedicalProvider>().loadRecords();
-                if (!mounted) return;
-                ScaffoldMessenger.of(
-                  context,
-                ).showSnackBar(const SnackBar(content: Text('所有数据已重置')));
-              } catch (e) {
-                if (!mounted) return;
-                ScaffoldMessenger.of(
-                  context,
-                ).showSnackBar(SnackBar(content: Text('重置失败：$e')));
-              }
-            },
-            child: const Text('确认重置'),
-          ),
-        ],
-      ),
+  void _showResetConfirm() async {
+    final confirmed = await ElegantConfirmDialog.confirmDelete(
+      context,
+      title: '确认重置',
+      message: '确定要清空所有数据吗？此操作不可恢复。',
+      confirmLabel: '确认重置',
+      icon: Icons.warning_amber_rounded,
     );
+    if (!confirmed || !mounted) return;
+    try {
+      await DatabaseHelper().resetAll();
+      await _notificationService.cancelAll();
+      if (!mounted) return;
+      await context.read<ScheduleProvider>().loadSchedules();
+      if (!mounted) return;
+      await context.read<CourseProvider>().loadCourses();
+      if (!mounted) return;
+      await context.read<DiaryProvider>().loadDiaries();
+      if (!mounted) return;
+      await context.read<MedicalProvider>().loadRecords();
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('所有数据已重置')));
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('重置失败：$e')));
+    }
   }
 }

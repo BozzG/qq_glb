@@ -106,6 +106,7 @@ class ScheduleProvider with ChangeNotifier {
           scheduleType: template.scheduleType,
           isCourse: template.isCourse,
           courseId: template.courseId,
+          courseHours: template.courseHours,
           memo: template.memo,
           parentId: isFirst ? null : template.id,   // 第一个实例是组长(parentId=null)
           repeatTemplateId: templateId,
@@ -188,6 +189,7 @@ class ScheduleProvider with ChangeNotifier {
               scheduleType: leader.scheduleType,
               isCourse: leader.isCourse,
               courseId: leader.courseId,
+              courseHours: leader.courseHours,
               memo: leader.memo,
               parentId: leader.id,
               repeatTemplateId: leader.repeatTemplateId,
@@ -280,7 +282,7 @@ class ScheduleProvider with ChangeNotifier {
         orElse: () => throw Exception('Schedule not found'),
       );
       if (schedule.isCourse && schedule.courseId != null) {
-        await _deductCourseHours(schedule.courseId!, checkIn.id, 1.0);
+        await _deductCourseHours(schedule.courseId!, checkIn.id, schedule.courseHours);
       }
 
       await loadSchedules();
@@ -298,9 +300,6 @@ class ScheduleProvider with ChangeNotifier {
     return _checkIns.any((c) => c.scheduleId == scheduleId);
   }
 
-  /// 向后兼容：保留旧方法名，语义等同 isCheckedIn
-  bool isCheckedToday(String scheduleId) => isCheckedIn(scheduleId);
-
   Future<void> _deductCourseHours(String courseId, String checkInId, double amount) async {
     final consumption = CourseConsumption(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
@@ -315,6 +314,54 @@ class ScheduleProvider with ChangeNotifier {
     if (courseMaps.isNotEmpty) {
       final course = Course.fromMap(courseMaps.first);
       await _db.update('courses', {'usedHours': course.usedHours + amount}, where: 'id = ?', whereArgs: [courseId]);
+    }
+  }
+
+  /// 撤销打卡（误打卡补救）。
+  /// 规则：
+  /// - 仅允许在打卡后 24 小时内撤销，超时返回 false；
+  /// - 删除该日程的打卡记录；
+  /// - 若打卡曾自动扣减课时，按消耗记录的 consumedAmount 原数回补 courses.usedHours，
+  ///   并删除对应的 auto 类型 CourseConsumption。回补金额取自消耗记录自身，
+  ///   因此天然兼容「一次打卡扣多课时」。
+  /// 返回 true 表示撤销成功。
+  Future<bool> undoCheckIn(String scheduleId) async {
+    try {
+      final idx = _checkIns.indexWhere((c) => c.scheduleId == scheduleId);
+      if (idx < 0) return false;
+      final checkIn = _checkIns[idx];
+
+      // 24h 时限
+      if (DateTime.now().difference(checkIn.checkInTime) >
+          const Duration(hours: 24)) {
+        return false;
+      }
+
+      // 回补课时：找该打卡关联的自动消耗记录
+      final consMaps = await _db.query('course_consumptions',
+          where: 'relatedCheckInId = ?', whereArgs: [checkIn.id]);
+      for (final m in consMaps) {
+        final cons = CourseConsumption.fromMap(m);
+        final courseMaps = await _db
+            .query('courses', where: 'id = ?', whereArgs: [cons.courseId]);
+        if (courseMaps.isNotEmpty) {
+          final course = Course.fromMap(courseMaps.first);
+          final restored = course.usedHours - cons.consumedAmount;
+          await _db.update('courses', {'usedHours': restored < 0 ? 0 : restored},
+              where: 'id = ?', whereArgs: [cons.courseId]);
+        }
+        await _db.delete('course_consumptions',
+            where: 'id = ?', whereArgs: [cons.id]);
+      }
+
+      // 删除打卡记录
+      await _db.delete('check_ins', where: 'id = ?', whereArgs: [checkIn.id]);
+
+      await loadSchedules();
+      return true;
+    } catch (e) {
+      debugPrint('撤销打卡失败: $e');
+      return false;
     }
   }
 
@@ -658,6 +705,7 @@ class ScheduleProvider with ChangeNotifier {
       scheduleType: template.scheduleType,
       isCourse: template.isCourse,
       courseId: template.courseId,
+      courseHours: template.courseHours,
       parentId: null,
       repeatTemplateId: repeatTemplateId,
       createdAt: DateTime.now(),
@@ -687,6 +735,7 @@ class ScheduleProvider with ChangeNotifier {
       scheduleType: template.scheduleType,
       isCourse: template.isCourse,
       courseId: template.courseId,
+      courseHours: template.courseHours,
       parentId: parentId,
       repeatTemplateId: repeatTemplateId,
       createdAt: DateTime.now(),
@@ -722,6 +771,7 @@ class ScheduleProvider with ChangeNotifier {
       scheduleType: template.scheduleType,
       isCourse: template.isCourse,
       courseId: template.courseId,
+      courseHours: template.courseHours,
       parentId: null, // 保持组长身份
       repeatTemplateId: original.repeatTemplateId,
       createdAt: original.createdAt,

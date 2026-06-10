@@ -89,11 +89,12 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
       };
 
   Future<void> _pickDate() async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: _selectedDate,
-      firstDate: DateTime(2020),
-      lastDate: DateTime.now(),
+    final picked = await ElegantDatePicker.show(
+      context,
+      initial: _selectedDate,
+      minimumDate: DateTime(2020),
+      maximumDate: DateTime.now(),
+      title: '日记日期',
     );
     if (picked != null && picked != _selectedDate) {
       setState(() => _selectedDate = picked);
@@ -169,24 +170,12 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
   }
 
   Future<void> _confirmDelete() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('删除这篇日记？'),
-        content: const Text('此操作不可撤销。'),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('取消')),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: FilledButton.styleFrom(backgroundColor: AppElegant.rose),
-            child: const Text('删除'),
-          ),
-        ],
-      ),
+    final confirmed = await ElegantConfirmDialog.confirmDelete(
+      context,
+      title: '删除这篇日记？',
+      message: '此操作不可撤销。',
     );
-    if (confirmed == true && mounted) {
+    if (confirmed && mounted) {
       await context.read<DiaryProvider>().deleteDiary(widget.diary!.id);
       if (mounted) Navigator.pop(context);
     }
@@ -921,7 +910,7 @@ class _DiaryEditScreenState extends State<DiaryEditScreen> {
                       width: 72,
                       height: 72,
                       fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => Container(
+                      errorBuilder: (_, _, _) => Container(
                         width: 72,
                         height: 72,
                         color: AppElegant.bgAlt,

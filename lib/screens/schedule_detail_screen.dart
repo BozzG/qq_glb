@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../models/models.dart';
 import '../providers/schedule_provider.dart';
+import '../providers/course_provider.dart';
 import '../utils/app_theme.dart';
 import '../widgets/elegant_kit.dart';
 import 'add_schedule_screen.dart';
@@ -35,12 +36,68 @@ class _ScheduleDetailScreenState extends State<ScheduleDetailScreen> {
     setState(() => _isCheckingIn = false);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(success ? '打卡成功' : '今天已经打卡过啦'),
+        content: Text(success ? '打卡成功' : '这条日程已经打过卡啦'),
       ),
     );
     if (success) {
       HapticFeedback.mediumImpact();
       Navigator.pop(context, true);
+    }
+  }
+
+  /// 撤销打卡：限打卡后 24h 内，二次确认后回补课时。
+  Future<void> _handleUndo() async {
+    final provider = context.read<ScheduleProvider>();
+    CheckIn? record;
+    for (final c in provider.checkIns) {
+      if (c.scheduleId == _schedule.id) {
+        record = c;
+        break;
+      }
+    }
+    if (record == null) return;
+
+    // 24h 时限校验（与 provider 内一致，提前给出友好提示）
+    if (DateTime.now().difference(record.checkInTime) >
+        const Duration(hours: 24)) {
+      HapticFeedback.lightImpact();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('打卡已超过 24 小时，无法撤销')),
+      );
+      return;
+    }
+
+    final hint = (_schedule.isCourse && _schedule.courseId != null)
+        ? '将删除本次打卡记录，并回补 ${_schedule.courseHours.round()} 课时。'
+        : '将删除本次打卡记录。';
+    final ok = await ElegantConfirmDialog.show<bool>(
+      context,
+      title: '撤销打卡？',
+      message: '$hint此操作仅限打卡后 24 小时内。',
+      icon: Icons.undo_rounded,
+      actions: const [
+        ElegantDialogAction(label: '再想想', value: false, isCancel: true),
+        ElegantDialogAction(label: '撤销', value: true, color: AppElegant.rose),
+      ],
+    );
+    if (ok != true) return;
+    if (!mounted) return;
+
+    final success = await provider.undoCheckIn(_schedule.id);
+    if (!mounted) return;
+    if (success) {
+      // 回补课时后刷新课程数据
+      await context.read<CourseProvider>().loadCourses();
+      if (!mounted) return;
+      HapticFeedback.mediumImpact();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('已撤销打卡')),
+      );
+      Navigator.pop(context, true);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('撤销失败，请稍后再试')),
+      );
     }
   }
 
@@ -162,16 +219,15 @@ class _ScheduleDetailScreenState extends State<ScheduleDetailScreen> {
           ElegantFloatingBar(
             child: Consumer<ScheduleProvider>(
               builder: (ctx, provider, _) {
-                final checkedToday =
-                    provider.isCheckedToday(_schedule.id);
+                final checkedIn = provider.isCheckedIn(_schedule.id);
                 return ElegantPrimaryButton(
-                  label: checkedToday
-                      ? '今日已打卡'
+                  label: checkedIn
+                      ? '已打卡 · 点此撤销'
                       : (_isCheckingIn ? '打卡中…' : '立即打卡'),
-                  icon: checkedToday ? Icons.check_rounded : null,
-                  onPressed: (checkedToday || _isCheckingIn)
+                  icon: checkedIn ? Icons.check_rounded : null,
+                  onPressed: _isCheckingIn
                       ? null
-                      : _handleCheckIn,
+                      : (checkedIn ? _handleUndo : _handleCheckIn),
                 );
               },
             ),
@@ -409,63 +465,38 @@ class _ScheduleDetailScreenState extends State<ScheduleDetailScreen> {
     );
   }
 
-  void _showDeleteConfirm() {
+  Future<void> _showDeleteConfirm() async {
     final isRecurring = _schedule.repeatTemplateId != null &&
         _schedule.repeatType != RepeatType.none;
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('删除确认'),
-        content: isRecurring
-            ? const Text('这是重复日程的一个实例，要如何删除？')
-            : Text('确定要删除「${_schedule.title}」吗？\n相关打卡记录也将被删除。'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('取消'),
-          ),
-          if (isRecurring) ...[
-            FilledButton(
-              style:
-                  FilledButton.styleFrom(backgroundColor: AppElegant.sand),
-              onPressed: () {
-                context.read<ScheduleProvider>().deleteSchedule(
-                      _schedule.id,
-                      deleteAllRecurring: false,
-                    );
-                Navigator.pop(ctx);
-                Navigator.pop(context);
-              },
-              child: const Text('仅此项'),
-            ),
-            FilledButton(
-              style:
-                  FilledButton.styleFrom(backgroundColor: AppElegant.rose),
-              onPressed: () {
-                context.read<ScheduleProvider>().deleteSchedule(
-                      _schedule.id,
-                      deleteAllRecurring: true,
-                    );
-                Navigator.pop(ctx);
-                Navigator.pop(context);
-              },
-              child: const Text('全部'),
-            ),
-          ] else
-            FilledButton(
-              style:
-                  FilledButton.styleFrom(backgroundColor: AppElegant.rose),
-              onPressed: () {
-                context
-                    .read<ScheduleProvider>()
-                    .deleteSchedule(_schedule.id);
-                Navigator.pop(ctx);
-                Navigator.pop(context);
-              },
-              child: const Text('删除'),
-            ),
+
+    if (isRecurring) {
+      // 重复日程：仅此项 / 全部 / 取消
+      final choice = await ElegantConfirmDialog.show<String>(
+        context,
+        title: '删除确认',
+        message: '这是重复日程的一个实例，要如何删除？',
+        icon: Icons.delete_outline_rounded,
+        actions: const [
+          ElegantDialogAction(label: '取消', value: 'cancel', isCancel: true),
+          ElegantDialogAction(label: '仅此项', value: 'one', color: AppElegant.sand),
+          ElegantDialogAction(label: '全部', value: 'all', color: AppElegant.rose),
         ],
-      ),
+      );
+      if (choice == null || choice == 'cancel' || !mounted) return;
+      await context.read<ScheduleProvider>().deleteSchedule(
+            _schedule.id,
+            deleteAllRecurring: choice == 'all',
+          );
+      if (mounted) Navigator.pop(context);
+      return;
+    }
+
+    final confirmed = await ElegantConfirmDialog.confirmDelete(
+      context,
+      message: '确定要删除「${_schedule.title}」吗？\n相关打卡记录也将被删除。',
     );
+    if (!confirmed || !mounted) return;
+    await context.read<ScheduleProvider>().deleteSchedule(_schedule.id);
+    if (mounted) Navigator.pop(context);
   }
 }

@@ -40,7 +40,7 @@ class _CourseListScreenState extends State<CourseListScreen> {
             child: Consumer<CourseProvider>(
               builder: (ctx, provider, _) {
                 if (provider.isLoading) {
-                  return const Center(child: CircularProgressIndicator());
+                  return ElegantLoading.center();
                 }
                 return RefreshIndicator(
                   color: AppElegant.accent,

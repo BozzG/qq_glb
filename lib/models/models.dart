@@ -15,6 +15,7 @@ class Schedule {
   final ScheduleType scheduleType;
   final bool isCourse;
   final String? courseId;
+  final double courseHours; // 每次打卡消耗的课时数，默认 1.0
   final String? memo;
   // 重复日程关联字段
   final String? parentId;          // 所属重复组ID（组内第一个日程的id，自身为null表示是组长）
@@ -34,6 +35,7 @@ class Schedule {
     this.scheduleType = ScheduleType.general,
     this.isCourse = false,
     this.courseId,
+    this.courseHours = 1.0,
     this.memo,
     this.parentId,
     this.repeatTemplateId,
@@ -74,7 +76,7 @@ class Schedule {
     'repeatDays': jsonEncode(repeatDays),
     'scheduleType': scheduleType.name,
     'isCourse': isCourse ? 1 : 0,
-    'courseId': courseId, 'memo': memo,
+    'courseId': courseId, 'courseHours': courseHours, 'memo': memo,
     'parentId': parentId,
     'repeatTemplateId': repeatTemplateId,
     'createdAt': createdAt.toIso8601String(), 'updatedAt': updatedAt.toIso8601String(),
@@ -89,18 +91,21 @@ class Schedule {
     repeatDays: (jsonDecode(map['repeatDays'] as String? ?? '[]') as List).cast<int>(),
     scheduleType: ScheduleType.values.firstWhere((e) => e.name == map['scheduleType'], orElse: () => ScheduleType.general),
     isCourse: (map['isCourse'] ?? 0) == 1,
-    courseId: map['courseId'], memo: map['memo'],
+    courseId: map['courseId'],
+    courseHours: (map['courseHours'] ?? 1).toDouble(),
+    memo: map['memo'],
     parentId: map['parentId'],
     repeatTemplateId: map['repeatTemplateId'],
     createdAt: DateTime.parse(map['createdAt']), updatedAt: DateTime.parse(map['updatedAt']),
   );
 
-  Schedule copyWith({String? title, String? description, String? location, DateTime? dateTime, DateTime? endTime, RepeatType? repeatType, List<int>? repeatDays, ScheduleType? scheduleType, bool? isCourse, String? courseId, String? memo, String? parentId, String? repeatTemplateId}) => Schedule(
+  Schedule copyWith({String? title, String? description, String? location, DateTime? dateTime, DateTime? endTime, RepeatType? repeatType, List<int>? repeatDays, ScheduleType? scheduleType, bool? isCourse, String? courseId, double? courseHours, String? memo, String? parentId, String? repeatTemplateId}) => Schedule(
     id: id, title: title ?? this.title, description: description ?? this.description,
     location: location ?? this.location, dateTime: dateTime ?? this.dateTime,
     endTime: endTime ?? this.endTime, repeatType: repeatType ?? this.repeatType,
     repeatDays: repeatDays ?? this.repeatDays, scheduleType: scheduleType ?? this.scheduleType,
     isCourse: isCourse ?? this.isCourse, courseId: courseId ?? this.courseId,
+    courseHours: courseHours ?? this.courseHours,
     memo: memo ?? this.memo, parentId: parentId ?? this.parentId,
     repeatTemplateId: repeatTemplateId ?? this.repeatTemplateId,
     createdAt: createdAt, updatedAt: updatedAt,

@@ -153,7 +153,7 @@ class _DiaryScreenState extends State<DiaryScreen> {
     return Consumer<DiaryProvider>(
       builder: (ctx, provider, _) {
         if (provider.isLoading) {
-          return const Center(child: CircularProgressIndicator());
+          return ElegantLoading.center();
         }
         final monthDiaries = _getDiariesForMonth();
         if (monthDiaries.isEmpty) {
@@ -230,25 +230,12 @@ class _DiaryScreenState extends State<DiaryScreen> {
   }
 
   Future<void> _confirmDelete(Diary diary) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('删除这篇日记？'),
-        content: const Text('此操作不可撤销。'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('取消'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: FilledButton.styleFrom(backgroundColor: AppElegant.rose),
-            child: const Text('删除'),
-          ),
-        ],
-      ),
+    final confirmed = await ElegantConfirmDialog.confirmDelete(
+      context,
+      title: '删除这篇日记？',
+      message: '此操作不可撤销。',
     );
-    if (confirmed == true && mounted) {
+    if (confirmed && mounted) {
       await context.read<DiaryProvider>().deleteDiary(diary.id);
     }
   }

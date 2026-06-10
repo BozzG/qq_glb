@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 import '../utils/app_theme.dart';
 
@@ -610,6 +611,132 @@ class ElegantSheetHandle extends StatelessWidget {
   }
 }
 
+/// 确认弹窗的一个操作项
+class ElegantDialogAction<T> {
+  /// 按钮文案
+  final String label;
+
+  /// 点击后回传的值（经 Navigator.pop 返回）
+  final T? value;
+
+  /// 是否为取消项（渲染为 TextButton，不填充）
+  final bool isCancel;
+
+  /// 填充按钮背景色（仅非取消项生效）；为空时取 AppElegant.accent
+  final Color? color;
+
+  const ElegantDialogAction({
+    required this.label,
+    this.value,
+    this.isCancel = false,
+    this.color,
+  });
+}
+
+/// 统一确认弹窗：精致风格的二次确认对话框。
+///
+/// · 复用全局 dialogTheme（圆角 20 / card 底 / ink 标题）。
+/// · 支持取消 + 单确认（删除/重置），也支持多分支（如重复日程的 仅此项/全部）。
+/// · 推荐通过静态方法 [show] / [confirmDelete] 调用。
+class ElegantConfirmDialog<T> extends StatelessWidget {
+  final String title;
+  final String message;
+  final IconData? icon;
+  final List<ElegantDialogAction<T>> actions;
+
+  const ElegantConfirmDialog({
+    super.key,
+    required this.title,
+    required this.message,
+    required this.actions,
+    this.icon,
+  });
+
+  /// 通用入口：返回所点操作项的 value（取消通常为 null/false）。
+  static Future<T?> show<T>(
+    BuildContext context, {
+    required String title,
+    required String message,
+    required List<ElegantDialogAction<T>> actions,
+    IconData? icon,
+    bool barrierDismissible = true,
+  }) {
+    return showDialog<T>(
+      context: context,
+      barrierDismissible: barrierDismissible,
+      builder: (_) => ElegantConfirmDialog<T>(
+        title: title,
+        message: message,
+        actions: actions,
+        icon: icon,
+      ),
+    );
+  }
+
+  /// 删除/破坏性操作快捷入口：取消 + 红色确认，返回 true 表示确认。
+  static Future<bool> confirmDelete(
+    BuildContext context, {
+    String title = '删除确认',
+    required String message,
+    String confirmLabel = '删除',
+    String cancelLabel = '取消',
+    IconData? icon = Icons.delete_outline_rounded,
+  }) async {
+    final result = await show<bool>(
+      context,
+      title: title,
+      message: message,
+      icon: icon,
+      actions: [
+        ElegantDialogAction(label: cancelLabel, value: false, isCancel: true),
+        ElegantDialogAction(
+          label: confirmLabel,
+          value: true,
+          color: AppElegant.rose,
+        ),
+      ],
+    );
+    return result == true;
+  }
+
+  Widget _buildAction(BuildContext context, ElegantDialogAction<T> a) {
+    if (a.isCancel) {
+      return TextButton(
+        onPressed: () => Navigator.pop(context, a.value),
+        child: Text(a.label),
+      );
+    }
+    return FilledButton(
+      style: FilledButton.styleFrom(
+        backgroundColor: a.color ?? AppElegant.accent,
+        foregroundColor: Colors.white,
+      ),
+      onPressed: () {
+        HapticFeedback.selectionClick();
+        Navigator.pop(context, a.value);
+      },
+      child: Text(a.label),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Row(
+        children: [
+          if (icon != null) ...[
+            Icon(icon, size: 20, color: AppElegant.accent),
+            const SizedBox(width: 10),
+          ],
+          Expanded(child: Text(title)),
+        ],
+      ),
+      content: Text(message),
+      actions: actions.map((a) => _buildAction(context, a)).toList(),
+    );
+  }
+}
+
 /// 标签徽章（小圆角灰底）
 class ElegantBadge extends StatelessWidget {
   final String text;
@@ -644,6 +771,188 @@ class ElegantBadge extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// ─────────────────────────────────────────────────────────────
+///  统一加载指示器
+///  · 替代各页面散落的 CircularProgressIndicator / CupertinoActivityIndicator
+///  · 默认走品牌强调色，可选文案
+/// ─────────────────────────────────────────────────────────────
+class ElegantLoading extends StatelessWidget {
+  final double size;
+  final String? label;
+  final Color? color;
+
+  const ElegantLoading({super.key, this.size = 28, this.label, this.color});
+
+  /// 居中铺满（常用于页面级 loading 占位）
+  static Widget center({String? label}) =>
+      Center(child: ElegantLoading(label: label));
+
+  @override
+  Widget build(BuildContext context) {
+    final c = color ?? AppElegant.accent;
+    final indicator = SizedBox(
+      width: size,
+      height: size,
+      child: CircularProgressIndicator(
+        strokeWidth: 2.4,
+        valueColor: AlwaysStoppedAnimation<Color>(c),
+      ),
+    );
+    if (label == null) return indicator;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        indicator,
+        const SizedBox(height: 12),
+        Text(
+          label!,
+          style: const TextStyle(fontSize: 13, color: AppElegant.inkSoft),
+        ),
+      ],
+    );
+  }
+}
+
+/// 底部弹窗通用头部（取消 / 标题 / 完成）—— 供选择器复用
+class _ElegantPickerHeader extends StatelessWidget {
+  final String title;
+  final VoidCallback onCancel;
+  final VoidCallback onConfirm;
+  const _ElegantPickerHeader({
+    required this.title,
+    required this.onCancel,
+    required this.onConfirm,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          CupertinoButton(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            onPressed: onCancel,
+            child: const Text('取消',
+                style: TextStyle(color: AppElegant.inkSoft, fontSize: 15)),
+          ),
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              color: AppElegant.ink,
+              letterSpacing: 1,
+            ),
+          ),
+          CupertinoButton(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            onPressed: onConfirm,
+            child: const Text('完成',
+                style: TextStyle(
+                    color: AppElegant.ink,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600)),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// 通用底部 Cupertino 选择器容器
+Future<DateTime?> _showElegantPickerSheet({
+  required BuildContext context,
+  required String title,
+  required Widget Function(ValueChanged<DateTime> onChanged) buildPicker,
+  required DateTime initial,
+  double height = 320,
+}) async {
+  DateTime temp = initial;
+  return showCupertinoModalPopup<DateTime>(
+    context: context,
+    builder: (ctx) => Container(
+      height: height,
+      decoration: const BoxDecoration(
+        color: AppElegant.card,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Column(
+          children: [
+            const ElegantSheetHandle(),
+            _ElegantPickerHeader(
+              title: title,
+              onCancel: () => Navigator.pop(ctx),
+              onConfirm: () {
+                HapticFeedback.selectionClick();
+                Navigator.pop(ctx, temp);
+              },
+            ),
+            Expanded(child: buildPicker((v) => temp = v)),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
+/// ─────────────────────────────────────────────────────────────
+///  统一日期选择器（底部弹窗）
+///  用法：final d = await ElegantDatePicker.show(context, initial: x);
+/// ─────────────────────────────────────────────────────────────
+class ElegantDatePicker {
+  static Future<DateTime?> show(
+    BuildContext context, {
+    required DateTime initial,
+    DateTime? minimumDate,
+    DateTime? maximumDate,
+    String title = '日期',
+  }) {
+    return _showElegantPickerSheet(
+      context: context,
+      title: title,
+      initial: initial,
+      buildPicker: (onChanged) => CupertinoDatePicker(
+        mode: CupertinoDatePickerMode.date,
+        initialDateTime: initial,
+        minimumDate: minimumDate ?? DateTime(2020),
+        maximumDate: maximumDate ?? DateTime(2035),
+        onDateTimeChanged: onChanged,
+      ),
+    );
+  }
+}
+
+/// ─────────────────────────────────────────────────────────────
+///  统一时间选择器（底部弹窗，24h）
+///  用法：final t = await ElegantTimePicker.show(context, initial: x);
+/// ─────────────────────────────────────────────────────────────
+class ElegantTimePicker {
+  static Future<DateTime?> show(
+    BuildContext context, {
+    required DateTime initial,
+    int minuteInterval = 5,
+    String title = '时间',
+  }) {
+    return _showElegantPickerSheet(
+      context: context,
+      title: title,
+      initial: initial,
+      height: 280,
+      buildPicker: (onChanged) => CupertinoDatePicker(
+        mode: CupertinoDatePickerMode.time,
+        initialDateTime: initial,
+        use24hFormat: true,
+        minuteInterval: minuteInterval,
+        onDateTimeChanged: onChanged,
       ),
     );
   }

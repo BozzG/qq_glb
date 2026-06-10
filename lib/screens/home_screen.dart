@@ -100,9 +100,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 // ─ 日程列表 ─
                 if (provider.isLoading)
-                  const SliverFillRemaining(
+                  SliverFillRemaining(
                     hasScrollBody: false,
-                    child: Center(child: CircularProgressIndicator()),
+                    child: ElegantLoading.center(),
                   )
                 else if (daySchedules.isEmpty)
                   const SliverFillRemaining(
@@ -134,14 +134,18 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                             ),
                             onCheckIn: () async {
+                              final messenger = ScaffoldMessenger.of(ctx);
                               final success = await provider.checkIn(
                                 daySchedules[index].id,
                               );
-                              if (!success && mounted) {
-                                ScaffoldMessenger.of(ctx).showSnackBar(
-                                  const SnackBar(content: Text('这条日程已经打过卡啦')),
-                                );
-                              }
+                              if (!mounted) return;
+                              messenger.showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    success ? '已打卡 · 记录成功' : '这条日程已经打过卡啦',
+                                  ),
+                                ),
+                              );
                             },
                           ),
                         ),

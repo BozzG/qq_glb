@@ -33,7 +33,7 @@ class _MedicalRecordsScreenState extends State<MedicalRecordsScreen> {
             actions: [
               ElegantCircleIconButton(
                 icon: Icons.add_rounded,
-                onTap: _showAddRecordDialog,
+                onTap: () => _showRecordForm(),
               ),
             ],
           ),
@@ -41,7 +41,7 @@ class _MedicalRecordsScreenState extends State<MedicalRecordsScreen> {
             child: Consumer<MedicalProvider>(
               builder: (ctx, provider, _) {
                 if (provider.isLoading) {
-                  return const Center(child: CircularProgressIndicator());
+                  return ElegantLoading.center();
                 }
                 return RefreshIndicator(
                   color: AppElegant.accent,
@@ -56,7 +56,7 @@ class _MedicalRecordsScreenState extends State<MedicalRecordsScreen> {
                               label: '暂无医疗记录',
                               hint: '从 + 按钮添加就诊记录',
                               action: OutlinedButton(
-                                onPressed: _showAddRecordDialog,
+                                onPressed: () => _showRecordForm(),
                                 child: const Text('添加记录'),
                               ),
                             ),
@@ -66,13 +66,14 @@ class _MedicalRecordsScreenState extends State<MedicalRecordsScreen> {
                           padding:
                               const EdgeInsets.fromLTRB(20, 4, 20, 32),
                           itemCount: provider.records.length,
-                          separatorBuilder: (_, __) =>
+                          separatorBuilder: (_, _) =>
                               const SizedBox(height: 10),
                           itemBuilder: (ctx, idx) {
                             final r = provider.records[idx];
                             return _MedicalCard(
                               record: r,
                               onDelete: () => provider.deleteRecord(r.id),
+                              onEdit: () => _showRecordForm(record: r),
                             );
                           },
                         ),
@@ -85,13 +86,14 @@ class _MedicalRecordsScreenState extends State<MedicalRecordsScreen> {
     );
   }
 
-  Future<void> _showAddRecordDialog() async {
-    final hospitalCtrl = TextEditingController();
-    final doctorCtrl = TextEditingController();
-    final diagnosisCtrl = TextEditingController();
-    final medicationCtrl = TextEditingController();
-    final notesCtrl = TextEditingController();
-    DateTime visitDate = DateTime.now();
+  Future<void> _showRecordForm({MedicalRecord? record}) async {
+    final isEditing = record != null;
+    final hospitalCtrl = TextEditingController(text: record?.hospitalName ?? '');
+    final doctorCtrl = TextEditingController(text: record?.doctorName ?? '');
+    final diagnosisCtrl = TextEditingController(text: record?.diagnosis ?? '');
+    final medicationCtrl = TextEditingController(text: record?.medication ?? '');
+    final notesCtrl = TextEditingController(text: record?.notes ?? '');
+    DateTime visitDate = record?.visitDate ?? DateTime.now();
 
     await showModalBottomSheet(
       context: context,
@@ -120,24 +122,24 @@ class _MedicalRecordsScreenState extends State<MedicalRecordsScreen> {
                       const Center(child: ElegantSheetHandle()),
                       const SizedBox(height: 16),
                       // Hero 标题
-                      const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 20),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              '新增就诊',
-                              style: TextStyle(
+                              isEditing ? '编辑就诊' : '新增就诊',
+                              style: const TextStyle(
                                 fontSize: 10,
                                 color: AppElegant.inkSoft,
                                 letterSpacing: 3,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
-                            SizedBox(height: 8),
+                            const SizedBox(height: 8),
                             Text(
-                              '添加就诊记录',
-                              style: TextStyle(
+                              isEditing ? '修改就诊记录' : '添加就诊记录',
+                              style: const TextStyle(
                                 fontSize: 24,
                                 fontWeight: FontWeight.w700,
                                 color: AppElegant.ink,
@@ -166,11 +168,12 @@ class _MedicalRecordsScreenState extends State<MedicalRecordsScreen> {
                               const SizedBox(height: 8),
                               InkWell(
                                 onTap: () async {
-                                  final date = await showDatePicker(
-                                    context: innerCtx,
-                                    initialDate: visitDate,
-                                    firstDate: DateTime(2020),
-                                    lastDate: DateTime(2030),
+                                  final date = await ElegantDatePicker.show(
+                                    innerCtx,
+                                    initial: visitDate,
+                                    minimumDate: DateTime(2020),
+                                    maximumDate: DateTime(2030),
+                                    title: '就诊日期',
                                   );
                                   if (date != null) {
                                     setInnerState(() => visitDate = date);
@@ -295,22 +298,37 @@ class _MedicalRecordsScreenState extends State<MedicalRecordsScreen> {
                                     );
                                     return;
                                   }
-                                  await context
-                                      .read<MedicalProvider>()
-                                      .addRecord(
-                                        MedicalRecord(
-                                          id: const Uuid().v4(),
-                                          hospitalName:
-                                              hospitalCtrl.text.trim(),
-                                          doctorName: doctorCtrl.text.trim(),
-                                          diagnosis:
-                                              diagnosisCtrl.text.trim(),
-                                          medication:
-                                              medicationCtrl.text.trim(),
-                                          notes: notesCtrl.text.trim(),
-                                          visitDate: visitDate,
-                                        ),
-                                      );
+                                  final provider =
+                                      context.read<MedicalProvider>();
+                                  if (isEditing) {
+                                    await provider.updateRecord(
+                                      MedicalRecord(
+                                        id: record.id,
+                                        scheduleId: record.scheduleId,
+                                        hospitalName: hospitalCtrl.text.trim(),
+                                        doctorName: doctorCtrl.text.trim(),
+                                        diagnosis: diagnosisCtrl.text.trim(),
+                                        medication: medicationCtrl.text.trim(),
+                                        reportImagePaths:
+                                            record.reportImagePaths,
+                                        notes: notesCtrl.text.trim(),
+                                        visitDate: visitDate,
+                                        createdAt: record.createdAt,
+                                      ),
+                                    );
+                                  } else {
+                                    await provider.addRecord(
+                                      MedicalRecord(
+                                        id: const Uuid().v4(),
+                                        hospitalName: hospitalCtrl.text.trim(),
+                                        doctorName: doctorCtrl.text.trim(),
+                                        diagnosis: diagnosisCtrl.text.trim(),
+                                        medication: medicationCtrl.text.trim(),
+                                        notes: notesCtrl.text.trim(),
+                                        visitDate: visitDate,
+                                      ),
+                                    );
+                                  }
                                   if (mounted && sheetCtx.mounted) {
                                     Navigator.pop(sheetCtx);
                                   }
@@ -384,8 +402,10 @@ class _MedicalRecordsScreenState extends State<MedicalRecordsScreen> {
 class _MedicalCard extends StatelessWidget {
   final MedicalRecord record;
   final VoidCallback onDelete;
+  final VoidCallback onEdit;
 
-  const _MedicalCard({required this.record, required this.onDelete});
+  const _MedicalCard(
+      {required this.record, required this.onDelete, required this.onEdit});
 
   @override
   Widget build(BuildContext context) {
@@ -624,20 +644,40 @@ class _MedicalCard extends StatelessWidget {
 
               const SizedBox(height: 24),
               Builder(
-                builder: (innerCtx) => OutlinedButton.icon(
-                  onPressed: () {
-                    onDelete();
-                    Navigator.pop(innerCtx);
-                  },
-                  icon: const Icon(Icons.delete_outline_rounded, size: 16),
-                  label: const Text('删除此记录'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppElegant.rose,
-                    side: BorderSide(
-                        color: AppElegant.rose.withValues(alpha: 0.3),
-                        width: 0.5),
-                    minimumSize: const Size(double.infinity, 46),
-                  ),
+                builder: (innerCtx) => Column(
+                  children: [
+                    ElegantPrimaryButton(
+                      label: '编辑此记录',
+                      icon: Icons.edit_outlined,
+                      height: 46,
+                      onPressed: () {
+                        Navigator.pop(innerCtx);
+                        onEdit();
+                      },
+                    ),
+                    const SizedBox(height: 10),
+                    OutlinedButton.icon(
+                      onPressed: () async {
+                        final ok = await ElegantConfirmDialog.confirmDelete(
+                          innerCtx,
+                          title: '删除此记录？',
+                          message: '此操作不可撤销，相关就诊信息将被永久删除。',
+                        );
+                        if (!ok) return;
+                        onDelete();
+                        if (innerCtx.mounted) Navigator.pop(innerCtx);
+                      },
+                      icon: const Icon(Icons.delete_outline_rounded, size: 16),
+                      label: const Text('删除此记录'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppElegant.rose,
+                        side: BorderSide(
+                            color: AppElegant.rose.withValues(alpha: 0.3),
+                            width: 0.5),
+                        minimumSize: const Size(double.infinity, 46),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
