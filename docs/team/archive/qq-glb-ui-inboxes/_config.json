@@ -1,0 +1,33 @@
+{
+  "name": "qq-glb-ui",
+  "leadAgentId": "e5d93ccea5944383992390db0bec7532",
+  "workspacePath": "/Users/bozzguo/project/qq_glb",
+  "createdAt": "2026-04-24T08:13:30.679Z",
+  "options": {
+    "workspacePath": "/Users/bozzguo/project/qq_glb",
+    "isAutoTeam": false
+  },
+  "members": [
+    {
+      "memberId": "team-lead@qq-glb-ui",
+      "name": "team-lead",
+      "role": "Team Lead - coordinates the team and interacts with the user"
+    },
+    {
+      "memberId": "ui-designer@qq-glb-ui",
+      "name": "ui-designer",
+      "role": "UI设计师Agent"
+    },
+    {
+      "memberId": "developer@qq-glb-ui",
+      "name": "developer",
+      "role": "开发者Agent"
+    },
+    {
+      "memberId": "code-reviewer@qq-glb-ui",
+      "name": "code-reviewer",
+      "role": "代码审查Agent"
+    }
+  ],
+  "isAutoTeam": false
+}

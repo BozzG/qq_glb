@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>代码审查报告 · v2.4 体验升级</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 24px; line-height: 1.6; color: #2b2b2b; }
+  .container { max-width: 1100px; margin: 0 auto; background: #fff; border-radius: 20px; padding: 40px; box-shadow: 0 20px 60px rgba(0,0,0,.3); }
+  .header { text-align: center; margin-bottom: 32px; padding-bottom: 20px; border-bottom: 3px solid #667eea; }
+  .header h1 { font-size: 26px; color: #4b3b8f; }
+  .header .meta { color: #888; font-size: 13px; margin-top: 8px; }
+  .score-circle { width: 150px; height: 150px; border-radius: 50%;
+    background: conic-gradient(#667eea 0% 90%, #e0e0e0 90% 100%); display: flex; align-items: center; justify-content: center; margin: 24px auto; }
+  .score-inner { width: 120px; height: 120px; border-radius: 50%; background: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .score-inner b { font-size: 46px; color: #667eea; line-height: 1; }
+  .score-inner span { font-size: 12px; color: #999; }
+  .summary { background: #f5f7fa; border-radius: 12px; padding: 18px 22px; margin: 10px 0 28px; font-size: 14px; }
+  .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin: 24px 0; }
+  .metric-card { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); padding: 18px; border-radius: 14px; box-shadow: 0 4px 6px rgba(0,0,0,.08); }
+  .metric-card h3 { font-size: 14px; color: #444; }
+  .metric-card .val { font-size: 30px; font-weight: 700; color: #4b3b8f; margin-top: 6px; }
+  h2 { margin: 30px 0 14px; font-size: 18px; color: #4b3b8f; border-left: 5px solid #667eea; padding-left: 10px; }
+  .issue { margin: 12px 0; padding: 14px 16px; border-left: 4px solid; border-radius: 8px; background: #f9f9f9; }
+  .issue h4 { font-size: 14px; margin-bottom: 6px; }
+  .issue p { font-size: 13px; color: #555; }
+  .critical { border-color: #e74c3c; background: #fdeded; }
+  .medium { border-color: #f39c12; background: #fff6e0; }
+  .minor { border-color: #27ae60; background: #e6f7ee; }
+  ul.good { list-style: none; }
+  ul.good li { padding: 8px 0 8px 26px; position: relative; font-size: 14px; border-bottom: 1px dashed #eee; }
+  ul.good li::before { content: '✅'; position: absolute; left: 0; }
+  pre { background: #2d2d2d; color: #f8f8f2; padding: 14px; border-radius: 8px; overflow-x: auto; margin: 10px 0; font-size: 12.5px; }
+  code { font-family: 'SFMono-Regular', 'Courier New', monospace; }
+  .tag { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 10px; background: #667eea; color: #fff; margin-left: 6px; }
+  table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 13px; }
+  th, td { border: 1px solid #eee; padding: 8px 10px; text-align: left; }
+  th { background: #f5f7fa; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>代码审查报告 · v2.4 体验升级（上）</h1>
+    <div class="meta">芊芊成长日志 · 2026-06-10 · 审查范围：默认消耗课时数 / 打卡撤销 / 医疗编辑 / elegant_kit 组件补全</div>
+    <div class="score-circle"><div class="score-inner"><b>9.0</b><span>总体评分 / 10</span></div></div>
+  </div>
+
+  <div class="summary">
+    本次共修改 <b>9 个源文件</b> + 文档 + 测试，新增 <b>6 条单测</b>（含 v3→v4 迁移与撤销回补），
+    <b>全量 117 条测试通过</b>，无 linter 报错。核心设计「回补金额取自消耗记录自身」使撤销逻辑与多课时扣减天然解耦，
+    向后兼容性良好（旧数据 courseHours 默认 1）。整体质量高，仅有少量可选优化项。
+  </div>
+
+  <div class="metrics">
+    <div class="metric-card"><h3>代码质量 Quality</h3><div class="val">9 / 10</div></div>
+    <div class="metric-card"><h3>安全性 Security</h3><div class="val">9 / 10</div></div>
+    <div class="metric-card"><h3>性能 Performance</h3><div class="val">9 / 10</div></div>
+    <div class="metric-card"><h3>可维护性 Maintainability</h3><div class="val">9 / 10</div></div>
+  </div>
+
+  <h2>✅ 优点</h2>
+  <ul class="good">
+    <li>撤销回补金额读取 <code>CourseConsumption.consumedAmount</code> 而非重算，自动兼容「一次打卡扣 N 课时」，避免数据漂移。</li>
+    <li>数据库迁移采用 <code>ALTER TABLE ADD COLUMN ... DEFAULT 1</code>，零数据丢失；三处版本号（测试库/正式库/recreateTables）同步到 4。</li>
+    <li><code>courseHours</code> 在全部 5 处重复实例构造路径透传，重复日程不会丢失配置。</li>
+    <li>新增 elegant_kit 组件后顺手移除了 add_schedule 的重复私有选择器（<code>_showCupertinoSheet</code>/<code>_SheetHeader</code>），减少设计体系欠债。</li>
+    <li>SQL 全部参数化（<code>where: 'id = ?'</code>），无注入风险；颜色/组件遵循 AppElegant token。</li>
+    <li>测试覆盖到位：多课时扣减、默认值、撤销回补、24h 边界、未打卡撤销、迁移列存在性。</li>
+  </ul>
+
+  <h2>⚠️ 问题与建议</h2>
+
+  <div class="issue minor">
+    <h4>🟢 撤销后跨页面课时刷新依赖手动 reload <span class="tag">一致性</span></h4>
+    <p><code>ScheduleProvider.undoCheckIn</code> 直接写 <code>courses</code> 表，但不通知 <code>CourseProvider</code>；
+    详情页已手动 <code>context.read&lt;CourseProvider&gt;().loadCourses()</code> 兜底。该行为与既有 <code>checkIn</code> 一致（checkIn 也未刷新课程），
+    属现有架构惯例。若未来课时屏与详情页同栈常驻，建议统一由事件/监听刷新。</p>
+  </div>
+
+  <div class="issue minor">
+    <h4>🟢 课时取值为 double 但 UI 限定整数 <span class="tag">建模</span></h4>
+    <p><code>Schedule.courseHours</code> 用 double 存储（与 Course 体系一致），UI 步进器为整数（min 1）。
+    当前兼容历史/手动 0.5 类数据无碍；若后续永不支持小数，可考虑在 UI 文案明确「整数课时」。无需立即处理。</p>
+  </div>
+
+  <div class="issue minor">
+    <h4>🟢 24h 边界判定使用严格大于 <span class="tag">边界</span></h4>
+    <p><code>difference(checkInTime) &gt; Duration(hours: 24)</code> 表示「恰好 24:00:00 仍可撤销」。语义合理，已有 25h 拒绝用例覆盖；
+    如需更严可改为 <code>&gt;=</code>，属产品口径选择。</p>
+  </div>
+
+  <h2>🔎 关键变更片段</h2>
+  <pre><code>// schedule_provider.dart —— 撤销按消耗记录回补，天然兼容多课时
+final restored = course.usedHours - cons.consumedAmount;
+await _db.update('courses',
+  {'usedHours': restored &lt; 0 ? 0 : restored},
+  where: 'id = ?', whereArgs: [cons.courseId]);
+
+// database_helper.dart —— v3 → v4 迁移
+if (oldVersion &lt; 4) {
+  await db.execute(
+    'ALTER TABLE schedules ADD COLUMN courseHours REAL DEFAULT 1');
+}</code></pre>
+
+  <h2>📊 测试结果</h2>
+  <table>
+    <tr><th>套件</th><th>结果</th></tr>
+    <tr><td>schedule_provider_test（含 5 条 v2.4 新用例）</td><td>✅ 通过</td></tr>
+    <tr><td>migration_test（版本=4 + courseHours 列）</td><td>✅ 通过</td></tr>
+    <tr><td>全量 flutter test</td><td>✅ 117 passed</td></tr>
+    <tr><td>linter</td><td>✅ 0 error</td></tr>
+  </table>
+
+  <p style="margin-top:24px; color:#888; font-size:12px; text-align:center;">
+    结论：可合入。建议项均为轻微/可选，不阻塞发布。
+  </p>
+</div>
+</body>
+</html>

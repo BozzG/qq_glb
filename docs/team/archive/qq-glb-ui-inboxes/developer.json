@@ -1,0 +1,56 @@
+[
+  {
+    "id": "msg-1777018481146-6pcqmj",
+    "from": "ui-designer",
+    "to": "developer",
+    "type": "message",
+    "content": "\n## UI升级设计方案\n\n### 项目路径：/Users/bozzguo/project/qq_glb\n\n### 一、优化配色方案 (app_theme.dart)\n\n```dart\nclass AppColors {\n  // === 主色调升级：更柔和、更有层次 ===\n  static const Color primary = Color(0xFFE091A5);      // 柔和玫瑰粉（原#E57382）\n  static const Color primaryLight = Color(0xFFFADDE3); // 浅樱花粉\n  static const Color primaryDark = Color(0xFFD4738C); // 深玫瑰\n  \n  // 打卡完成渐变 - 粉到绿的优雅过渡\n  static const Color checkInGradientStart = Color(0xFFF8BBD9); // 浅粉\n  static const Color checkInGradientEnd = Color(0xFFA5D6A7);   // 浅绿\n  \n  // 背景色升级\n  static const Color background = Color(0xFFFFFBF9); // 暖白带粉调\n  \n  // 功能色 - 更柔和\n  static const Color success = Color(0xFF81C784); // 完成 - 柔和绿\n  static const Color error = Color(0xFFE57373);   // 错误 - 柔和红\n}\n```\n\n### 二、新建优雅勾选组件 (lib/widgets/elegant_check_button.dart)\n\n需要实现的功能：\n1. 渐变背景（未打卡：粉色渐变；已打卡：粉→绿渐变）\n2. 弹性缩放动画（点击时）\n3. 勾选图标弹性弹出动画\n4. 外发光阴影效果\n5. 内圈光晕装饰\n\n### 三、修改 _ScheduleCard (home_screen.dart 第640-661行)\n\n将原有的简单Container替换为新的 `ElegantCheckInButton` 组件。\n\n### 四、整体风格微调\n\n1. 卡片圆角：16px → 20px\n2. 阴影：同色系渐变阴影\n3. 按钮过渡：300ms线性 → 400ms弹性缓动\n\n请按此方案实现，完成后告知。\n",
+    "timestamp": "2026-04-24T08:14:41.146Z",
+    "read": true
+  },
+  {
+    "id": "msg-1777018956163-leo3jr",
+    "from": "team-lead",
+    "to": "developer",
+    "type": "message",
+    "content": "用户反馈：首页日程条目还是太丑，单个条目高度太高了，需要重新设计。\n\n具体要求：\n1. 降低单个条目高度，更加紧凑\n2. 整体更简洁、优雅\n3. 保持粉色主色调\n4. 勾选圈设计要好看\n\n请重新设计 _ScheduleCard 组件，优化布局和高度。",
+    "timestamp": "2026-04-24T08:22:36.163Z",
+    "read": true
+  },
+  {
+    "id": "msg-1777019264354-gsblyv",
+    "from": "ui-designer",
+    "to": "developer",
+    "type": "message",
+    "content": "\n已重新设计勾选按钮，请更新 `home_screen.dart` 中的 `_ScheduleCard`：\n\n**新设计要点：**\n1. **形状**：圆角胶囊形（不再是圆形）\n2. **布局**：内含勾选方块图标 + \"打卡\"/\"已打卡\"文字标签\n3. **渐变**：未打卡用粉色半透明，已打卡用粉→绿渐变\n4. **动画**：点击缩放 + 勾选图标弹性弹出\n\n**参考代码（第640-661行替换）：**\n```dart\n// 替换原有的 Container 为新组件\nElegantCheckInButton(\n  isChecked: isCheckedIn,\n  scheduleColor: schedule.color,\n  onTap: onCheckIn,\n),\n```\n\n新组件文件已更新：`lib/widgets/elegant_check_button.dart`\n",
+    "timestamp": "2026-04-24T08:27:44.354Z",
+    "read": true
+  },
+  {
+    "id": "msg-1777019582662-cvsejk",
+    "from": "ui-designer",
+    "to": "developer",
+    "type": "message",
+    "content": "\n新设计方案已更新，请确保 `home_screen.dart` 中调用正常：\n\n**新设计特点：**\n1. **极简圆形** - 36x36 紧凑尺寸\n2. **粉色系深浅变化** - 未打卡：浅粉填充，已打卡：深粉填充\n3. **无文字标签** - 只有简洁图标\n4. **微妙边框** - 融入页面但不消失\n5. **极轻阴影** - 仅已打卡状态添加\n6. **快速微动画** - 200ms 点击反馈\n\n文件已更新：`lib/widgets/elegant_check_button.dart`\n",
+    "timestamp": "2026-04-24T08:33:02.662Z",
+    "read": true
+  },
+  {
+    "id": "msg-1777019601575-nj9yyu",
+    "from": "team-lead",
+    "to": "developer",
+    "type": "message",
+    "content": "UI设计师已完成打卡按钮第二版设计，请将 lib/widgets/elegant_check_button.dart 中的组件集成到 home_screen.dart 的 _ScheduleCard 中。\n\n设计要点：\n- 36x36 紧凑圆形\n- 粉色系深浅变化（浅粉→深粉）\n- 移除绿色，统一粉色系\n- 无文字，只有简洁图标\n- 微妙半透明边框\n- 200ms 快速微反馈动画\n\n请完成集成。",
+    "timestamp": "2026-04-24T08:33:21.575Z",
+    "read": true
+  },
+  {
+    "id": "msg-1777019613521-u4u813",
+    "from": "ui-designer",
+    "to": "developer",
+    "type": "message",
+    "content": "\n请确认 `home_screen.dart` 中的 `_ScheduleCard` 已正确使用新版 `ElegantCheckInButton`。\n\n新组件签名未变：\n```dart\nElegantCheckInButton(\n  isChecked: isCheckedIn,\n  scheduleColor: schedule.color,\n  onTap: onCheckIn,\n)\n```\n\n如已集成，请确认通过lint检查并回复。\n",
+    "timestamp": "2026-04-24T08:33:33.521Z",
+    "read": true
+  }
+]

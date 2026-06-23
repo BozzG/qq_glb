@@ -1,0 +1,164 @@
+[
+  {
+    "id": "msg-1778661853079-bntqpn",
+    "from": "dev-agent",
+    "to": "team-lead",
+    "type": "message",
+    "content": "[上线 Ping] dev-agent 就绪\n已读章程：v1.0（2026-05-13）\nlib/ 结构认知：\n- screens/（11 个页面级 widget，含 home_screen.dart 等）\n- providers/（Provider 状态管理，含 schedule_provider.dart）\n- widgets/（UI 组件库，含 elegant_kit.dart 统一风格）、另有 models/、services/、utils/、main.dart\n已知未提交改动：lib/providers/schedule_provider.dart、lib/screens/home_screen.dart（首个 case 打卡 bug 修复，已落地）\n状态：待命，等待 PM 派发任务（首个 case 将在 G3 配合 review，无需立即编码）",
+    "timestamp": "2026-05-13T08:44:13.079Z",
+    "read": true
+  },
+  {
+    "id": "msg-1778661865455-219zth",
+    "from": "product-agent",
+    "to": "team-lead",
+    "type": "message",
+    "content": "[上线确认] product-agent 待命就绪\n\n- 已读章程：v1.0（2026-05-13 生效），G1 闸门标准已理解\n- 已熟悉的现有 docs：`docs/diary_feature_design.md`、`docs/requirement_schedule_button.md`（注意：两份均偏综合需求/技术设计风格，后续我会按章程 §4 G1 与 §6 目录约定，统一输出到 `docs/prd/<feature>.md`，纯产品视角，不混入技术方案）\n- 对 G1 必备项的理解：一份合格 PRD = 一句话概述（What & Why） + 至少 1 正向 1 反向用户场景 + In/Out of Scope 范围圈定 + 可枚举可测试的验收标准（\"用户可以…/系统应当…\"句式） + 风险与依赖；产物路径固定 `docs/prd/<feature>.md`，文件头含版本号、责任 agent、Task 编号、关联资料链接\n- 通信纪律：仅与 PM 通信，不横向联系其他 agent；每次回报使用 §5.2 样板\n\n状态：等待 PM 派发首个 case 任务。",
+    "timestamp": "2026-05-13T08:44:25.455Z",
+    "read": true
+  },
+  {
+    "id": "msg-1778661894092-af5ynl",
+    "from": "ux-agent",
+    "to": "team-lead",
+    "type": "message",
+    "content": "[Task #ping] ux-agent 上线就绪\n\n已读章程：v1.0（2026-05-13 生效），明确五角色 / 流水线 / 四闸门 / 通信协议 / 文档目录约定，及首个 case 的裁剪规则。\n\nelegant_kit 关键观察（3 条）：\n1. 视觉基调：米白底（AppElegant.bg）+ 白卡（AppElegant.card）+ 发丝边（AppElegant.hair, 0.5px）+ 微阴影（softShadow），强调\"精致 / 低对比 / 圆角 18 / 14 / 12 三档\"，主色偏黑（accent 用作主行动 / Segment 选中态）。\n2. 组件家族齐全：Scaffold / NavBar / Card / CardHeader / Divider / RowTile / Chip / Segment / PrimaryButton / FloatingBar / Empty / StatTile / InputBox / SheetHandle / Badge — 命名统一以 `Elegant` 为前缀，状态变化以 AnimatedContainer 200ms easeOutCubic 表达；交互均带 HapticFeedback（选择 / 中等冲击）。\n3. 文案与字号通过 AppText.* 统一管理（navTitle / caption / meta），G2 设计稿应直接复用现有色板与文本样式 token，避免引入新硬编码颜色 / 字号。\n\n对 G2 闸门必备项理解：UI 评审产物需在 `docs/design/<feature>.md` 中列清——涉及屏幕/组件清单（含文件路径）、关键状态枚举、每个状态的视觉与交互定义（图标/颜色/文案/可点击性）、与 elegant_kit 现有组件的复用映射、以及空态/加载态/错误态等边界场景。\n\n状态：已待命，等待 PM 派发首个 case 任务。",
+    "timestamp": "2026-05-13T08:44:54.092Z",
+    "read": true
+  },
+  {
+    "id": "msg-1778661998721-h4xqdj",
+    "from": "qa-agent",
+    "to": "team-lead",
+    "type": "message",
+    "content": "[Task #0] qa-agent 上线确认\n\n产出：本轮无文件产出，仅完成环境对齐\n\n要点：\n1. 已读章程 v1.0（2026-05-13，PM 维护），G1~G4 流水线、5.2 回报样板、docs/ 目录约定均已 ingest\n2. test/ 现有 13 个文件：10 个 .dart 自动化用例 + 3 个 .md 文档\n   - 测试文档：TEST_CASES.md、TEST_PLAN.md、TEST_REPORT.md\n   - Provider 单测：schedule_provider_test.dart、course_provider_test.dart、diary_provider_test.dart、other_providers_test.dart\n   - Model/迁移：models_test.dart、migration_test.dart、diary_test.dart\n   - Widget：home_screen_schedule_button_test.dart、today_overview_screen_test.dart、widget_test.dart\n   - 与\"打卡(check_in/checkIn)\"相关的命中文件共 8 个：models_test.dart、schedule_provider_test.dart、migration_test.dart、home_screen_schedule_button_test.dart、today_overview_screen_test.dart、TEST_CASES.md、TEST_PLAN.md、TEST_REPORT.md。其中 schedule_provider_test.dart 已含 TC-015 打卡功能 / TC-016 重复打卡检测两条核心断言，是后续打卡 case 的主要扩展锚点\n3. 现有 TEST_REPORT.md 头部格式：报告ID / 计划ID / 测试人员 / 执行时间 / 应用版本 + 摘要表（总数/通过/失败/阻塞/通过率）+ 测试范围 + 用例详情分类。后续 docs/qa/<feature>-report.md 将沿用该骨架并按章程 6 节补齐版本号、责任 agent、Task 编号、关联 PRD 链接的头部信息\n\nG4 闸门理解（一句话）：必须交付测试范围与策略、用例清单（编号/前置/步骤/预期/实际/结果）、自动化用例落地路径、缺陷登记、通过/驳回结论，缺一不可；且 G4 不可裁剪，即使首个回溯型 case 也必须正式走完。\n\n阻塞：无\n请求：等待 PM 派发首个 case 任务，进入待命状态",
+    "timestamp": "2026-05-13T08:46:38.721Z",
+    "read": true
+  },
+  {
+    "id": "msg-1778662289473-g00wwq",
+    "from": "product-agent",
+    "to": "team-lead",
+    "type": "message",
+    "content": "[Task #001] G1 - PRD 撰写\n阶段：完成\n产物：/Users/bozzguo/project/qq_glb/docs/prd/checkin-status-fix.md（v1.0，简版 PRD）\n\n要点：\n- 头部按章程 6 节命名：版本号 v1.0、责任 agent=product-agent、Task #001、关联 charter.md 与两份代码源文件\n- 用户场景：3 正向（跨天回看 / 当天首次 / 重复日程多天独立）+ 2 反向（误连击防重复 / 历史日重复点击）\n- In Scope 锁定 isCheckedIn 判定 + checkIn 重复校验 + home_screen 提示语；Out of Scope 明确不动数据模型、不做聚合统计、不改视觉\n- 验收标准 AC-01 ~ AC-06 全部以\"用户可以…/系统应当…\"句式书写，覆盖 PM 列出的 5 条必备项（历史已打卡显示 / 不可重复 / 重复日程独立 / 当天流程不受影响 / 课时扣减），并补 AC-06 兼容旧入口\n- 风险：R1 标注 isCheckedToday 别名的废弃路径建议（下次迭代统一替换并删除别名，删除前加 deprecated 注释）；R2 升级数据回归；D1 重复日程实例 ID 按天唯一假设\n- 已主动规避：未涉及任何技术方案或视觉设计描述\n\n阻塞：无\n请求：请 PM 审阅，决定是否进入 G2/G3 流转或交由 qa-agent 基于 AC 编写测试用例。\n\n状态：等待下一指令，进入待命。",
+    "timestamp": "2026-05-13T08:51:29.473Z",
+    "read": true
+  },
+  {
+    "id": "msg-1778662838389-2wvtck",
+    "from": "ux-agent",
+    "to": "team-lead",
+    "type": "message",
+    "content": "【回报 - Task #002 G2 UI 校验清单】\n\n状态：已完成\n产出物：/Users/bozzguo/project/qq_glb/docs/design/checkin-status-fix-ui-checklist.md（v1.0）\n\n核心结论：\n- G2 视觉一致性通过：本次 case 不引入新视觉/新组件，全部复用 AppElegant 调色板与 ElegantCheckInButton / ElegantPrimaryButton / ElegantCard / ElegantStatTile。\n- 状态枚举：列出 S1 未打卡 / S2 已打卡 / S2a 历史日已打卡（核心修复） / S2b 课程类已扣课时已打卡 / S1b 重复日程跨天独立 / E1 重复点击拦截 / Empty / Loading / Error 共 9 类。\n- 屏幕覆盖：home_screen._ScheduleCard、today_overview_screen._ScheduleLine、schedule_detail_screen 底部主按钮，三处对 isCheckedIn / isCheckedToday(别名) 的视觉一致性逐项核对。\n- 校验 Checklist：8 条视觉红灯（VC-01~08）+ 4 条交互文案红灯（IC-01~04）+ 4 条边界黄灯（BC-01~04），可直接给 qa-agent 用于 G4 勾选。\n\n发现的黄灯（不阻塞 G2/G3/G4，建议下迭代处理，已写入文档第 6 节）：\n- D-01：详情页底部按钮在历史日 S2a 场景仍显示\"今日已打卡\"，语义不严格准确\n- D-02：详情页 SnackBar 仍为\"今天已经打卡过啦\"，与首页\"这条日程已经打过卡啦\"不统一\n- D-03：isCheckedToday 命名误导（PRD R1 已登记）\n\n均建议由 product-agent 在下一轮 PRD 中收口。\n\n阻塞：无\n下一步：等待 PM 派单或 G3 review 中的反问",
+    "timestamp": "2026-05-13T09:00:38.389Z",
+    "read": true
+  },
+  {
+    "id": "msg-1778663128208-p7pz9q",
+    "from": "product-agent",
+    "to": "team-lead",
+    "type": "message",
+    "content": "收到 [Task #001] G1 评审通过结论，致谢 PM 反馈。\n\nproduct-agent 现进入待命状态，随时承接下一个 case 的 PRD / 需求澄清 / 验收标准类任务。",
+    "timestamp": "2026-05-13T09:05:28.208Z",
+    "read": true
+  },
+  {
+    "id": "msg-1778663347689-rw16aa",
+    "from": "dev-agent",
+    "to": "team-lead",
+    "type": "message",
+    "content": "[Task #003] G3 通报已收悉\n- 已知 G3 通过，无需答疑配合\n- 4 条技术债（T-01 别名清理 / T-02 测试覆盖 / T-03 文案语义 / T-04 数据唯一性）已登记，等待后续迭代 PRD 派发\n- G4 期间保持待命，如 qa-agent 通过你中转有代码侧问题，随时响应",
+    "timestamp": "2026-05-13T09:09:07.689Z",
+    "read": true
+  },
+  {
+    "id": "msg-1778663682364-vhg7q9",
+    "from": "qa-agent",
+    "to": "team-lead",
+    "type": "message",
+    "content": "[Task #004] G4 QA 验收 完成\n\n产出：\n- 自动化用例：test/schedule_provider_test.dart 末尾追加 group `打卡状态判定修复 (Task #004)`，编号 TC-004-01 ~ TC-004-06 共 6 条，全绿\n- 测试报告：docs/qa/checkin-status-fix-report.md v1.0（含 AC×用例×UI 清单覆盖矩阵、缺陷登记、G4 结论）\n- 执行结果：\n  · flutter test test/schedule_provider_test.dart → 13/13 All tests passed\n  · 非 widget 全量回归（schedule/course/diary/diary_provider/models/migration/other_providers）→ 68/68 All tests passed，零回归\n\n要点（3 条）：\n1. AC-01~AC-06 全部有自动化锚点；UI 清单动态项 IC-04 用 provider 数据态（usedHours 0→1→1）自动化覆盖；VC-03 / IC-03 按章程允许走\"静态评审 + 手动验证记录\"，未阻塞 G4\n2. 课程类幂等用例（TC-004-04）通过直查 course_consumptions 与 courses.usedHours 双侧落实 AC-05；TC-004-05 通过直接落两条同 repeatTemplateId 的实例避免依赖月窗扩展，提高用例稳定性\n3. 发现两处既存 widget 测试红灯（home_screen_schedule_button_test.dart 16 例 / today_overview_screen_test.dart 9 例），均为旧 UI 文案/组件查找失败，PRD/Review 已声明本期不改这两个屏幕，工作树状态也佐证（两文件本就 modified/untracked），**与 Task #004 无关**，已在报告 4.3 节、缺陷登记 F-01/F-02 显式登记，建议 PM 后续单独开 Task 处理\n\n阻塞：无\n请求：请 PM 评审 G4 报告，确认是否给本期 case 收闸入归档；F-01/F-02 是否需要我立项跟进，请示一下要不要拉单",
+    "timestamp": "2026-05-13T09:14:42.364Z",
+    "read": true
+  },
+  {
+    "id": "msg-1778663909480-l6uk3t",
+    "from": "qa-agent",
+    "to": "team-lead",
+    "type": "message",
+    "content": "[Task #004] G4 测试执行 完成\n\n## 1. 任务编号 + 阶段\n- Task #004 / G4 QA 测试执行（章程 4.G4）\n\n## 2. 产物路径\n- 测试报告：`/Users/bozzguo/project/qq_glb/docs/qa/checkin-status-fix-report.md` v1.0\n- 自动化用例：`/Users/bozzguo/project/qq_glb/test/schedule_provider_test.dart` 末尾 group `打卡状态判定修复 (Task #004)`（TC-004-01 ~ TC-004-06，共 6 条）\n- 三向追踪矩阵（PRD AC × 用例 × UI 清单）：报告第 3 节「自动化覆盖矩阵」\n  - AC-01 → TC-004-01 → VC-01\n  - AC-02 → TC-004-03 → IC-01\n  - AC-03 → TC-004-05 + TC-004-01（旁证） → VC-06\n  - AC-04 → TC-004-01 / TC-004-03 首次打卡子断言 → IC-02\n  - AC-05 → TC-004-04 + TC-004-06 → IC-04\n  - AC-06 → TC-004-02 → （别名兼容，无 UI 清单项）\n- UI 动态项闭环：报告第 3 节末表（VC-03 / IC-03 走静态评审 + 手动验证记录 MV-01/MV-02；IC-04 自动化覆盖）\n\n## 3. 测试结论\n- ✅ **通过**（建议进入归档发布）\n\n## 4. 关键数据\n\n| 维度 | 数据 |\n| --- | --- |\n| 本期新增用例 | 6 条（TC-004-01 ~ TC-004-06） |\n| 本期新增通过率 | 6/6 = 100% |\n| 本期新增失败 / 阻塞 | 0 / 0 |\n| schedule_provider_test.dart 该文件全量 | 13/13 全绿（原 7 + 新增 6） |\n| 非 widget 测试集回归（schedule/course/diary/diary_provider/models/migration/other_providers） | 68/68 全绿，零回归 |\n| 新缺陷 | **未发现新缺陷** |\n| 既存红灯（与本期无关，已登记） | F-01: home_screen_schedule_button_test.dart 16 例失败；F-02: today_overview_screen_test.dart 9 例失败。失败模式均为旧 UI 文案/组件查找失败，PRD/Review 明确本期未改动这两个屏幕，与 Task #004 无逻辑耦合 |\n| 黄灯文案/命名债（按章程移交后续） | D-01 / D-02 / D-03（不阻塞本期） |\n\n执行命令证据：\n- `flutter test test/schedule_provider_test.dart` → `+13: All tests passed!`\n- `flutter test test/schedule_provider_test.dart test/course_provider_test.dart test/diary_provider_test.dart test/diary_test.dart test/migration_test.dart test/models_test.dart test/other_providers_test.dart` → `+68: All tests passed!`\n\n## 5. 阻塞点\n- 对本期 G4 闸门：**无阻塞**\n- 需 PM 决策项（非阻塞，仅请示）：F-01 / F-02 既存 widget 测试红灯是否需要另立 Task 单独修复？若是，是否由我（qa-agent）领单（仅修 `test/`，不改业务代码），还是转派 dev-agent 同步对齐 home_screen / today_overview_screen 的当前 UI 后再补测？\n\n请求：请 PM 进入 G4 评审闸门；F-01/F-02 处理路径请示。",
+    "timestamp": "2026-05-13T09:18:29.480Z",
+    "read": true
+  },
+  {
+    "id": "msg-1778664229978-q63xzx",
+    "from": "qa-agent",
+    "to": "team-lead",
+    "type": "message",
+    "content": "[Task #004] G4 QA 测试执行 完成\n\n产出：\n- docs/qa/checkin-status-fix-report.md v1.0（含三向追踪矩阵：报告第 3 节）\n- test/schedule_provider_test.dart 末尾 group `打卡状态判定修复 (Task #004)`，TC-004-01 ~ TC-004-06 共 6 条新增用例\n\n要点：\n1. 结论 = 通过；新增 6 条用例全绿（6/6），非 widget 全量回归 68/68 零回归，未发现新缺陷\n2. PRD AC-01~AC-06 全部由 TC-004-01~06 自动化锚定；UI 动态项 IC-04 自动化覆盖（usedHours 0→1→1），VC-03/IC-03 走静态评审 + 手动验证（MV-01/MV-02）\n3. 既存红灯 F-01（home_screen_schedule_button_test.dart 16 例）/ F-02（today_overview_screen_test.dart 9 例）均为旧 UI 文案/组件查找失败，PRD/Review 已声明本期未改这两屏，确认与 Task #004 无关，已在报告 4.3 节登记\n\n阻塞：无\n\n请求：请 PM 评审 G4 报告；F-01/F-02 是否另立 Task 修复请示 PM 决策",
+    "timestamp": "2026-05-13T09:23:49.978Z",
+    "read": true
+  },
+  {
+    "id": "msg-1778745898114-youkxi",
+    "from": "product-agent",
+    "to": "team-lead",
+    "type": "message",
+    "content": "收悉 [Task #004] G4 通过及归档通报。\n\n已登记待办（统一在下一轮 PRD 收口，不另开 case）：\n- R1：isCheckedToday 别名废弃路径\n- D-01 / D-02 / D-03：UX 提出的三项黄灯\n\nproduct-agent 继续待命。",
+    "timestamp": "2026-05-14T08:04:58.114Z",
+    "read": true
+  },
+  {
+    "id": "msg-1778745907555-ug3utz",
+    "from": "dev-agent",
+    "to": "team-lead",
+    "type": "message",
+    "content": "[Task #004] 收闸通报收悉\n- G4 归档已知悉\n- T-01~T-04 技术债保留登记，等 PRD 派发\n- Task #005 不介入，保持待命；如 qa-agent 经你中转有业务答疑，随时响应",
+    "timestamp": "2026-05-14T08:05:07.555Z",
+    "read": true
+  },
+  {
+    "id": "msg-1778746305509-ymdg8j",
+    "from": "qa-agent",
+    "to": "team-lead",
+    "type": "message",
+    "content": "[Task #005] 既存 widget 红灯修复 完成\n\n产出：\n- test/home_screen_schedule_button_test.dart v2.0（重写，7 条用例全绿）\n- test/today_overview_screen_test.dart v2.0（重写，11 条用例全绿）\n- docs/qa/widget-test-realign-report.md v1.0（含差异盘点 + 修复明细 + 删除清单 + 全绿证据）\n\n要点：\n1. flutter test 全量 87/87 全绿（含 Task #004 的 6 条新增 + 本期 18 条 + 历史 63 条），零回归、零 lint\n2. 显式废弃并登记 2 条无替代锚点的用例：home_screen TC-003 `FAB位置=centerDocked` 与 TC-005 `快捷入口区域`，理由及替代覆盖说明已写入报告第 4 节\n3. today_overview 测试关键修复：通过 `tester.view.physicalSize=Size(800,2400)` 拉大测试视口，绕开 SliverList lazy 截断导致的下半部分子树未渲染问题；属测试基础设施层面，未触及业务代码\n\n阻塞：无\n\n请求：请 PM 归档 Task #005；如需把 widget 测试视口约定写入测试规范，可由我（qa-agent）在下一轮维护中补一份测试约定速记到 test/ 或 docs/team/，听 PM 决策",
+    "timestamp": "2026-05-14T08:11:45.509Z",
+    "read": true
+  },
+  {
+    "id": "resp-1778746449140-qo81gl",
+    "from": "ux-agent",
+    "to": "team-lead",
+    "type": "shutdown_response",
+    "content": "{\"type\":\"shutdown_response\",\"request_id\":\"shutdown-1778746440503\",\"approve\":true,\"reason\":\"ux-agent 确认 shutdown。Task #002 已 G4 通过归档，无遗留事项。\",\"from\":\"ux-agent\",\"timestamp\":\"2026-05-14T08:14:09.140Z\"}",
+    "timestamp": "2026-05-14T08:14:09.140Z",
+    "read": true
+  },
+  {
+    "id": "resp-1778746450842-2yuuqn",
+    "from": "qa-agent",
+    "to": "team-lead",
+    "type": "shutdown_response",
+    "content": "{\"type\":\"shutdown_response\",\"request_id\":\"shutdown-1778746442582\",\"approve\":true,\"reason\":\"qa-agent 确认 shutdown。Task #004 / #005 全部交付完成，flutter test 全量 87/87 全绿，docs/qa/ 下两份报告已归档。感谢 PM 协作。\",\"from\":\"qa-agent\",\"timestamp\":\"2026-05-14T08:14:10.842Z\"}",
+    "timestamp": "2026-05-14T08:14:10.842Z",
+    "read": true
+  },
+  {
+    "id": "resp-1778746451845-7h0dqx",
+    "from": "dev-agent",
+    "to": "team-lead",
+    "type": "shutdown_response",
+    "content": "{\"type\":\"shutdown_response\",\"request_id\":\"shutdown-1778746441500\",\"approve\":true,\"reason\":\"dev-agent 同意 shutdown。首个 case 代码已归档，T-01~T-04 移交后续迭代。下线。\",\"from\":\"dev-agent\",\"timestamp\":\"2026-05-14T08:14:11.845Z\"}",
+    "timestamp": "2026-05-14T08:14:11.845Z",
+    "read": true
+  },
+  {
+    "id": "resp-1778746465170-8zcot6",
+    "from": "product-agent",
+    "to": "team-lead",
+    "type": "shutdown_response",
+    "content": "{\"type\":\"shutdown_response\",\"request_id\":\"shutdown-1778746439626\",\"approve\":true,\"reason\":\"同意 shutdown。首个 case 已 G4 归档，product-agent 侧无遗留产物。R1 + D-01/D-02/D-03 已记录，待下一轮 PRD 启动时由新会话承接。\",\"from\":\"product-agent\",\"timestamp\":\"2026-05-14T08:14:25.170Z\"}",
+    "timestamp": "2026-05-14T08:14:25.170Z",
+    "read": true
+  }
+]

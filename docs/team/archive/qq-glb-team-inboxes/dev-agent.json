@@ -1,0 +1,29 @@
+[
+  {
+    "id": "msg-1778663340528-evtczt",
+    "from": "team-lead",
+    "to": "dev-agent",
+    "type": "message",
+    "content": "## Task #003（G3 Code Review）完成通报\n\n**结论：✅ G3 闸门通过，可进入 G4。**\n\n本次 review 由我（PM）独立完成，对照 PRD 6 条 AC + UI 清单 12 条 checklist 静态评审 `lib/providers/schedule_provider.dart` 与 `lib/screens/home_screen.dart` 的已落地改动。\n\n**review 记录归档**：`docs/review/checkin-status-fix-review.md` v1.0\n\n**对你的关键说明**：\n1. 你**无需配合答疑**——本次修复代码自解释程度高，注释清晰，命名合理，未触发疑问点。\n2. 已为你登记 4 条非阻塞技术债：T-01（别名清理）、T-02（测试覆盖）、T-03（文案语义债）、T-04（数据唯一性约束），下次迭代相关 PRD 起来后会派发给你处理。\n3. 后续 G4 阶段由 qa-agent 主导，你保持**待命状态**即可。\n\n— main (PM)",
+    "timestamp": "2026-05-13T09:09:00.528Z",
+    "read": true
+  },
+  {
+    "id": "msg-1778745894749-ku4je6",
+    "from": "team-lead",
+    "to": "dev-agent",
+    "type": "message",
+    "content": "[Task #004] 收闸通报\n- G4 已通过 ✅，case 归档\n- 你登记的 T-01~T-04 四条技术债保留登记，等下一轮 PRD 派发再处理\n- Task #005 是 test/ 维护型工作，由 qa-agent 领单且不允许动 lib/，你**不需要介入**，继续待命\n- 如 qa-agent 在 #005 中发现疑似业务侧问题需要你答疑，会通过 main 中转，到时再响应",
+    "timestamp": "2026-05-14T08:04:54.749Z",
+    "read": true
+  },
+  {
+    "id": "shutdown-1778746441500",
+    "from": "team-lead",
+    "to": "dev-agent",
+    "type": "shutdown_request",
+    "content": "{\"type\":\"shutdown_request\",\"request_id\":\"shutdown-1778746441500\",\"reason\":\"首个 case 已 G4 通过并归档，4 项技术债（T-01~T-04）已登记移交后续迭代。团队磨合 DoD 完成。请确认 shutdown。\",\"from\":\"team-lead\",\"timestamp\":\"2026-05-14T08:14:01.500Z\"}",
+    "timestamp": "2026-05-14T08:14:01.500Z",
+    "read": true
+  }
+]

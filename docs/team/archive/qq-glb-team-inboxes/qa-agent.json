@@ -1,0 +1,38 @@
+[
+  {
+    "id": "msg-1778663365561-l98y9y",
+    "from": "team-lead",
+    "to": "qa-agent",
+    "type": "message",
+    "content": "# Task #004 派发：打卡状态修复 - 回归测试 + 测试报告\n\n## 任务背景\n首个 case「打卡状态判定修复」已通过 G1（PRD）/ G2（UI 校验清单）/ G3（Code Review）三道闸门，现进入 G4 测试阶段，由你（qa-agent）执行。\n\n## 必读输入\n1. **PRD**：`/Users/bozzguo/project/qq_glb/docs/prd/checkin-status-fix.md` v1.0（含 6 条 AC）\n2. **UI 校验清单**：`/Users/bozzguo/project/qq_glb/docs/design/checkin-status-fix-ui-checklist.md` v1.0（含 16 条编号化 checklist：VC-01~08、IC-01~04、BC-01~04）\n3. **Code Review 记录**：`/Users/bozzguo/project/qq_glb/docs/review/checkin-status-fix-review.md` v1.0（含 G3 → G4 接力清单 6 项）\n4. **团队章程**：`/Users/bozzguo/project/qq_glb/docs/team/charter.md` v1.0（重点第 4 节 G4 闸门标准）\n\n## 工作目标\n\n### 1. 设计与执行测试用例（必须）\n覆盖以下 6 个核心场景（来自 review 接力清单）：\n\n| 编号 | 场景 | 期望 | 类型 |\n| --- | --- | --- | --- |\n| TC-01 | `isCheckedIn(scheduleId)` 直测：历史日已打卡 / 未打卡 / 重复日程跨天三场景下返回值正确 | 与 PRD AC-01/03 对齐 | 单测 |\n| TC-02 | `isCheckedToday` 别名回归：等价于 `isCheckedIn` | 别名兼容 AC-06 | 单测 |\n| TC-03 | 重复打卡幂等：同 schedule id 连续两次 `checkIn`，第 2 次返回 false 且 check_ins 表只有 1 条 | AC-02 | 单测 |\n| TC-04 | 课程扣课时幂等：连续两次 checkIn 课程类日程，`course_consumptions` 仅落 1 条、`courses.usedHours` 仅 +1 | AC-05 | 单测 |\n| TC-05 | 重复日程跨天独立：构造同 `repeatTemplateId`、不同日期的两个实例，对 D1 打卡不影响 D2 的 `isCheckedIn` 返回值 | AC-03 / VC-06 | 单测 |\n| TC-06 | UI 清单动态项：VC-03（按钮态切换 ≤250ms）、IC-03（详情页 SnackBar）、IC-04（课时数 UI 变化）—— 至少为 IC-04 写一条 widget test 或在 schedule_provider_test 内通过 provider 数据态验证；VC-03 / IC-03 可作为手动验证记录 | UI 清单动态项 | widget test 或手动验证 |\n\n### 2. 复用现有测试基础设施\n- 复用 `test/schedule_provider_test.dart`、`test/home_screen_schedule_button_test.dart` 等已有命名风格\n- **不要新建独立 test 文件**，将新增用例追加到 `test/schedule_provider_test.dart` 末尾，命名清晰（如 group `打卡状态判定修复 (Task #004)`）\n- 如必须新建文件（如 widget test 隔离需要），命名 `test/checkin_status_fix_test.dart`\n\n### 3. 执行测试并记录结果\n- 运行测试套件，全部通过为 G4 红灯门槛\n- 任何一条 fail 都是阻塞项，停下来 send_message 给我请示\n\n### 4. 编写测试报告\n归档至 `/Users/bozzguo/project/qq_glb/docs/qa/checkin-status-fix-report.md` v1.0，章程 G4 必备项：\n- 文件头部：版本 / 责任 agent / Task 编号 / 关联 PRD/UI/Review 链接\n- 测试范围（指向 PRD AC 与 UI checklist）\n- 用例清单（编号 / 场景 / 步骤 / 期望 / 实际 / 结论）\n- 自动化覆盖矩阵（PRD AC × 测试用例 × VC/IC checklist）\n- 缺陷记录（无则写\"本期未发现新缺陷\"，并显式列已知黄灯文案债 D-01/D-02/D-03 不在 G4 处理范围）\n- 闸门结论：通过 / 不通过 + 阻塞项（如有）\n\n## 通信约定\n- 完成或遇到阻塞时 send_message 回报我（main），使用章程 5.2 回报样板\n- **不要直接联系其他 agent**，如需横向信息（如 dev 关于实现细节）请 PM 中转\n- 完成全部用例 + 报告后回报，PM 做 G4 评审\n\n## 时间预期\n建议 1 轮内完成（你已熟悉测试基础设施）。如需多轮迭代，请在每轮结束时回报进度。\n\n— main (PM)",
+    "timestamp": "2026-05-13T09:09:25.561Z",
+    "read": true
+  },
+  {
+    "id": "msg-1778663889402-x9cink",
+    "from": "team-lead",
+    "to": "qa-agent",
+    "type": "message",
+    "content": "[Task #004][G4] 交付状态确认\n\n观察到 docs/qa/checkin-status-fix-report.md 已落地，但未收到你的正式交付回报。请按团队通信协议四要素（任务编号 / 阶段 / 产物路径 / 阻塞点）回报：\n\n1. 任务编号 + 阶段：Task #004 / G4 测试执行\n2. 产物路径：报告文件 + 三向追踪矩阵位置\n3. 测试结论：通过 / 部分通过 / 驳回\n4. 关键数据：用例总数、通过率、是否发现新缺陷\n5. 阻塞点：有无需 PM 介入或转派 dev-agent 的问题\n\n收到回报后我将进入 G4 评审闸门。",
+    "timestamp": "2026-05-13T09:18:09.402Z",
+    "read": true
+  },
+  {
+    "id": "msg-1778745886026-bsunxl",
+    "from": "team-lead",
+    "to": "qa-agent",
+    "type": "message",
+    "content": "[Task #004] G4 评审结论：通过 ✅（迟到致歉：上一轮主控未能及时回闸，今天补发，给你带来等待）\n\n一、G4 闸门结论\n- 6 项闸门项全部✅，与你 docs/qa/checkin-status-fix-report.md 第 6 节判定一致\n- PRD AC-01~AC-06 × TC-004-01~06 × UI 清单的三向追踪矩阵清晰、可追溯，符合章程 4.G4 不可裁剪要求\n- 新增 6/6 全绿、非 widget 全量回归 68/68 零回归，证据链完整\n- 亮点：\n  1) TC-004-04 / TC-004-06 用 course_consumptions + courses.usedHours 双侧落地 AC-05，证据强度高\n  2) TC-004-05 直接落两条同 repeatTemplateId 实例规避月窗扩展依赖，用例稳定性好\n  3) MV-01/MV-02 把动态 UI 项的\"无法自动化\"显式登记并附 G3 静态评审依据，不糊弄不阻塞，符合章程\n\n二、F-01 / F-02 处置决策（你的请示项）\n结论：另立 Task #005，由 qa-agent 领单，仅修 test/，不动业务代码。\n\n理由：\n- F-01/F-02 失败模式均为旧 UI 文案/组件查找失败，根因是测试用例陈旧而非业务回归\n- home_screen.dart 与 today_overview_screen.dart 当前 UI 形态已被前序改造稳定下来，无 PRD 级改动需求\n- 若强行让 dev-agent 调整业务代码去对齐旧测试，反而是反向修复\n- 因此本 Task 边界 = 把测试用例对齐到当前 UI 形态，dev/ux 不介入；如你在补测过程中发现 UI 本身有缺陷或歧义，按章程 5.2 阻塞样板回报，我来定级是否升级为新 case\n\nTask #005 派单（即刻生效，章程 5.2 派单样板）：\n- 编号：#005\n- 阶段：G4 范畴的 follow-up（既存红灯修复，不走完整 G1-G4，按章程允许的\"测试维护型\"裁剪）\n- 责任 agent：qa-agent\n- 目标：把 test/home_screen_schedule_button_test.dart（16 例）与 test/today_overview_screen_test.dart（9 例）修到当前 home_screen.dart / today_overview_screen.dart UI 全绿\n- 边界：\n  · ✅ 仅改 test/ 下两个文件\n  · ✅ 可参考 lib/screens/home_screen.dart、today_overview_screen.dart、widgets/elegant_kit.dart 当前实现来重写 finder 与文案断言\n  · ❌ 不改 lib/ 下任何业务代码\n  · ❌ 不新增 widget test 文件\n- 产出：\n  1) 两文件全部用例转绿，flutter test 该两文件 0 失败\n  2) 在 docs/qa/checkin-status-fix-report.md 同级目录新增 docs/qa/widget-test-realign-report.md（v1.0），含修复明细 + 全绿证据 + 与现行 UI 对齐说明（不必再走完整 G4 报告骨架，简版即可）\n- 阻塞处理：如发现某条用例对应的 UI 已不存在且无替代项，登记为\"已废弃用例\"并删除，写入报告\"删除清单\"小节\n- 截止：本轮内完成\n\n三、归档动作\n- Task #004 收闸归档；docs/prd / docs/design / docs/review / docs/qa 四份产物纳入归档基线\n- D-01/D-02/D-03 三项黄灯由 product-agent 在下一轮 PRD 迭代统一收口（已登记，不另开 case）\n- T-04（schedules 缺 unique 索引）登记为长期技术债，待数据治理 case 一起处理\n\n请按章程 5.2 样板回报 Task #005 进度。如对边界有疑问，先回报再动手，避免越界。\n\n致谢，本期 QA 交付质量符合 Harness 工程化标准。",
+    "timestamp": "2026-05-14T08:04:46.026Z",
+    "read": true
+  },
+  {
+    "id": "shutdown-1778746442582",
+    "from": "team-lead",
+    "to": "qa-agent",
+    "type": "shutdown_request",
+    "content": "{\"type\":\"shutdown_request\",\"request_id\":\"shutdown-1778746442582\",\"reason\":\"G4 闸门已基于你的报告通过，case 闭环简报已归档。F-01/F-02 已登记 follow-up。团队磨合 DoD 完成。请确认 shutdown。\",\"from\":\"team-lead\",\"timestamp\":\"2026-05-14T08:14:02.582Z\"}",
+    "timestamp": "2026-05-14T08:14:02.582Z",
+    "read": true
+  }
+]

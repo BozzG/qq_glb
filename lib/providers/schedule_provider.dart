@@ -3,6 +3,7 @@ import 'package:uuid/uuid.dart';
 import '../models/models.dart';
 import '../services/database_helper.dart';
 import '../services/notification_service.dart';
+import '../services/widget_service.dart';
 
 class ScheduleProvider with ChangeNotifier {
   final DatabaseHelper _db = DatabaseHelper();
@@ -42,6 +43,17 @@ class ScheduleProvider with ChangeNotifier {
     }
     _isLoading = false;
     notifyListeners();
+    // 同步今日日程到 iOS 桌面 Widget（统一收口，覆盖增删改/打卡/撤销/重复规则提交；
+    // 非 iOS 平台内部 no-op）。fire-and-forget，失败不影响主流程。
+    _syncWidget();
+  }
+
+  /// 把今日日程推送给桌面 Widget（仅 iOS 生效）。
+  void _syncWidget() {
+    WidgetService.syncTodaySchedules(
+      todaySchedules: getSchedulesForDay(DateTime.now()),
+      isChecked: isCheckedIn,
+    );
   }
 
   /// 添加日程（非重复：直接保存；重复：批量创建当前月+下月实例）

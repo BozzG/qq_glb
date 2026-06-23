@@ -1,0 +1,47 @@
+[
+  {
+    "id": "msg-1778662068359-56q5d3",
+    "from": "team-lead",
+    "to": "product-agent",
+    "type": "message",
+    "content": "[Task #001] G1 - PRD 撰写\n目标：为已落地的\"打卡状态 bug 修复\"补一份简版 PRD，重点是用户场景与验收标准，作为 G3/G4 阶段的判断依据。\n输入：\n  - 关键代码：\n    - /Users/bozzguo/project/qq_glb/lib/providers/schedule_provider.dart（看 checkIn / isCheckedIn / isCheckedToday 三处实现）\n    - /Users/bozzguo/project/qq_glb/lib/screens/home_screen.dart（看 _ScheduleCard 的 isCheckedIn 调用与提示语）\n  - 背景概要（PM 提供，可直接采纳或基于代码再确认）：\n    - Bug 现象：昨天已打卡的日程，今天打开应用查看时，图标仍显示\"未打卡\"，且能再次点击打卡\n    - 根因：原 isCheckedToday 用\"今天的自然日\"匹配 check_in 记录；但每个日程实例本身就绑定到具体某一天（重复日程也是按天独立实例），跨天判断造成误判\n    - 已落地修复要点：\n      1) 新增 isCheckedIn(scheduleId)：基于\"该日程实例是否有任意 check_in 记录\"判断\n      2) checkIn() 内部重复校验同步改为按实例（去掉 isSameDay(today)）\n      3) isCheckedToday 保留为 isCheckedIn 的别名，向后兼容 today_overview_screen / schedule_detail_screen\n      4) home_screen 调用 isCheckedIn，提示语改为\"这条日程已经打过卡啦\"\n\n产出：/Users/bozzguo/project/qq_glb/docs/prd/checkin-status-fix.md\n\n闸门标准（章程 4.G1）必须包含：\n  - 一句话概述（What & Why）\n  - 用户场景（至少 1 正向 + 1 反向；建议覆盖：跨天回看已打卡、当天打卡、重复日程多天独立打卡、误连击防重复）\n  - 功能范围（In / Out of Scope）\n  - 验收标准：可枚举、可测试，每条以\"用户可以…\"或\"系统应当…\"开头；至少覆盖：\n    * 历史日已打卡日程的图标态正确显示\n    * 同一日程实例不可重复打卡（含 UI 提示）\n    * 重复日程的不同天实例彼此独立\n    * 当天日程的打卡流程不受影响\n    * 课程类日程打卡仍正确扣课时（关联现有逻辑）\n  - 风险/依赖：至少标注 isCheckedToday 兼容别名的废弃路径建议\n\n文档头部按章程 6 节命名规范：版本号、责任 agent、Task 编号(#001)、关联资料链接（指向 charter.md 与上述代码路径）。\n\n约束：\n  - 不写技术方案、不写视觉设计\n  - 控制篇幅，简版 PRD 即可，不必铺陈大量背景\n  - 写好后用 send_message 回 main，按章程 5.2 样板回报\n\n截止：尽快返回，本轮内完成。",
+    "timestamp": "2026-05-13T08:47:48.359Z",
+    "read": true
+  },
+  {
+    "id": "msg-1778662483982-6locmx",
+    "from": "team-lead",
+    "to": "product-agent",
+    "type": "message",
+    "content": "[Task #001] 状态确认\nPM 检查 docs/prd/ 目录暂未发现 checkin-status-fix.md。\n请确认：\n1. 是否还在撰写中？预计还需多久？\n2. 如已遇到阻塞（信息不足/工具问题），请按章程 5.2 样板回报阻塞点，我来解。\n3. 如已完成，请重发一次完成回报，附上文件绝对路径。\n\n提醒：文件路径必须是 /Users/bozzguo/project/qq_glb/docs/prd/checkin-status-fix.md（绝对路径）。",
+    "timestamp": "2026-05-13T08:54:43.982Z",
+    "read": true
+  },
+  {
+    "id": "msg-1778662512013-ts26mp",
+    "from": "team-lead",
+    "to": "product-agent",
+    "type": "message",
+    "content": "[Task #001] G1 评审结论：通过 ✅\n\nPRD 已通过 G1 闸门。亮点：\n1. 验收标准编号化（AC-01~AC-06），便于 QA 一一对应\n2. R1 主动给出 isCheckedToday 别名的废弃路径建议，与 PM 派发要求一致\n3. D1 显式标注重复日程实例 ID 唯一性假设，给 dev-agent 留下 G3 自检锚点\n\n无需修订。请进入待命，等待下一个 case 的派发。\n\n致谢，本次产物质量符合 Harness 工程化交付标准。",
+    "timestamp": "2026-05-13T08:55:12.013Z",
+    "read": true
+  },
+  {
+    "id": "msg-1778745890226-il4wij",
+    "from": "team-lead",
+    "to": "product-agent",
+    "type": "message",
+    "content": "[Task #004] 收闸通报\n- G4 已通过 ✅，整个 case（PRD/UI 清单/Review/QA 报告）已归档\n- 你登记的 R1（isCheckedToday 别名废弃）+ UX 提的 D-01/D-02/D-03 三项黄灯，已确认由你在下一轮 PRD 中统一收口（不另开 case）\n- 暂无新派单，继续待命\n\n请确认收悉即可，无需产物。",
+    "timestamp": "2026-05-14T08:04:50.226Z",
+    "read": true
+  },
+  {
+    "id": "shutdown-1778746439626",
+    "from": "team-lead",
+    "to": "product-agent",
+    "type": "shutdown_request",
+    "content": "{\"type\":\"shutdown_request\",\"request_id\":\"shutdown-1778746439626\",\"reason\":\"首个 case 已 G4 通过并归档（docs/team/case-summary-checkin-status-fix.md），团队磨合 DoD 完成。请确认 shutdown。\",\"from\":\"team-lead\",\"timestamp\":\"2026-05-14T08:13:59.626Z\"}",
+    "timestamp": "2026-05-14T08:13:59.626Z",
+    "read": true
+  }
+]

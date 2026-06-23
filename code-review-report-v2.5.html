@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>代码审查报告 · v2.5.0 成长报告 & iOS Widget</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', Roboto, sans-serif; background: linear-gradient(135deg, #C9526E 0%, #8D6B94 100%); padding: 24px; line-height: 1.6; color: #2B1E22; }
+  .container { max-width: 1100px; margin: 0 auto; background: #FBF8F7; border-radius: 20px; padding: 40px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+  .header { text-align: center; margin-bottom: 32px; padding-bottom: 20px; border-bottom: 2px solid #EDE6E7; }
+  .header h1 { font-size: 24px; color: #2B1E22; }
+  .header .sub { color: #7A6268; font-size: 13px; margin-top: 8px; letter-spacing: 1px; }
+  .score-circle { width: 140px; height: 140px; border-radius: 50%; background: conic-gradient(#C9526E 0% 88%, #EDE6E7 88% 100%); display: flex; align-items: center; justify-content: center; margin: 24px auto; }
+  .score-inner { width: 112px; height: 112px; border-radius: 50%; background: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .score-inner .n { font-size: 42px; font-weight: 700; color: #C9526E; line-height: 1; }
+  .score-inner .l { font-size: 11px; color: #7A6268; letter-spacing: 2px; }
+  .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin: 28px 0; }
+  .metric-card { background: #fff; padding: 18px; border-radius: 14px; border: 0.5px solid #EDE6E7; box-shadow: 0 4px 16px rgba(0,0,0,0.03); }
+  .metric-card .t { font-size: 12px; color: #7A6268; letter-spacing: 1px; }
+  .metric-card .v { font-size: 28px; font-weight: 700; color: #2B1E22; margin: 6px 0; }
+  .bar { height: 6px; border-radius: 3px; background: #F4EEEF; overflow: hidden; }
+  .bar > i { display: block; height: 100%; background: #C9526E; }
+  h2 { font-size: 16px; margin: 28px 0 12px; color: #2B1E22; }
+  .issue { margin: 12px 0; padding: 14px 16px; border-left: 4px solid; border-radius: 8px; background: #fff; }
+  .issue h3 { font-size: 14px; margin-bottom: 6px; }
+  .issue p { font-size: 13px; color: #5a4a4f; }
+  .critical { border-color: #e74c3c; background: #fdf0ef; }
+  .medium { border-color: #C8A97E; background: #faf4ea; }
+  .minor { border-color: #7A9278; background: #eef3ed; }
+  .good { border-color: #7A9278; background: #fff; }
+  ul.pts { list-style: none; }
+  ul.pts li { padding: 8px 0 8px 26px; position: relative; font-size: 13.5px; border-bottom: 0.5px solid #F4EEEF; }
+  ul.pts li::before { content: "✓"; position: absolute; left: 0; color: #7A9278; font-weight: 700; }
+  pre { background: #2d2330; color: #f3e9ee; padding: 12px 14px; border-radius: 8px; overflow-x: auto; margin: 8px 0; font-size: 12.5px; }
+  code { font-family: 'SF Mono', 'Courier New', monospace; }
+  .tag { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 6px; background: #EFC9D3; color: #A73D56; margin-left: 8px; }
+  .files { font-size: 12.5px; color: #7A6268; background:#fff; border:0.5px solid #EDE6E7; border-radius:10px; padding:12px 16px; }
+  .files code { color:#A73D56; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>代码审查报告 · v2.5.0</h1>
+    <div class="sub">成长报告（P1-6） · iOS 桌面小组件（P1-7）　|　审查时间：2026-06-23</div>
+  </div>
+
+  <div class="score-circle"><div class="score-inner"><div class="n">8.8</div><div class="l">SCORE</div></div></div>
+
+  <div class="metrics">
+    <div class="metric-card"><div class="t">代码质量</div><div class="v">9.0</div><div class="bar"><i style="width:90%"></i></div></div>
+    <div class="metric-card"><div class="t">安全性</div><div class="v">9.5</div><div class="bar"><i style="width:95%"></i></div></div>
+    <div class="metric-card"><div class="t">性能</div><div class="v">8.5</div><div class="bar"><i style="width:85%"></i></div></div>
+    <div class="metric-card"><div class="t">可维护性</div><div class="v">9.0</div><div class="bar"><i style="width:90%"></i></div></div>
+  </div>
+
+  <div class="files">
+    审查范围：<code>growth_report_service.dart</code> · <code>growth_report_screen.dart</code> · <code>widget_service.dart</code> · <code>schedule_provider.dart</code>(同步钩子) · <code>check_in_stats_screen.dart</code>(入口) · iOS <code>QianqianWidget.swift</code> / entitlements
+  </div>
+
+  <h2>✅ 优点</h2>
+  <ul class="pts">
+    <li>聚合与展示分离：<code>GrowthReportService</code> 为纯函数、无 BuildContext/IO 依赖，13 个单测全绿，边界（周/月/闰年/跨年/空区间）覆盖到位。</li>
+    <li>口径一致性强：打卡率沿用 <code>getCheckInStats</code> 的「按日程自身日期归属 + 半开区间」规则，未另起统计口径，避免与统计页冲突。</li>
+    <li>设计体系严格延续：全程使用 <code>AppElegant</code> token 与 <code>elegant_kit</code> 组件，无硬编码颜色、无直接读 <code>Theme.of(context).colorScheme.*</code>。</li>
+    <li>平台隔离干净：<code>WidgetService</code> 对非 iOS 全 no-op（kIsWeb + Platform.isIOS 双重守卫），单测/Android/macOS 不受影响，已验证 provider 单测无回归。</li>
+    <li>同步收口合理：Widget 数据同步统一收口到 <code>loadSchedules</code> 末尾，天然覆盖增删改/打卡/撤销/重复规则提交，避免多点重复写入。</li>
+    <li>失败降级：同步与分享均 try/catch 仅 debugPrint/toast，不影响主流程。</li>
+  </ul>
+
+  <h2>⚠️ 问题</h2>
+
+  <div class="issue medium">
+    <h3>🟡 长图导出依赖在屏 RepaintBoundary，超长内容可能裁剪 <span class="tag">growth_report_screen.dart</span></h3>
+    <p>当前对位于 <code>SingleChildScrollView</code> 内的 <code>RepaintBoundary</code> 调用 <code>toImage</code>。月报课程/情绪较多时内容可能高于视口，部分机型/版本下存在仅捕获可见区的风险。多数情况下 RepaintBoundary 会绘制完整子树，但建议在真机对「超长月报」验证；若发现裁剪，改为离屏渲染（独立 widget tree + 手动 layout/paint pipeline）。</p>
+  </div>
+
+  <div class="issue minor">
+    <h3>🟢 分享前 60ms 固定延时为经验值 <span class="tag">growth_report_screen.dart</span></h3>
+    <p><code>Future.delayed(60ms)</code> 用于等待重绘，属启发式。可改为 <code>WidgetsBinding.instance.endOfFrame</code> 更确定地等待下一帧完成。</p>
+  </div>
+
+  <div class="issue minor">
+    <h3>🟢 连续天数经由 dayKey 字符串反解 DateTime <span class="tag">growth_report_service.dart</span></h3>
+    <p><code>_longestStreak</code> 将日期 key 拆字符串再 parse 回 DateTime。功能正确、数据量小无性能问题；可直接用 <code>Set&lt;DateTime&gt;</code>（归一化到日）省去往返，可读性更佳。</p>
+  </div>
+
+  <div class="issue minor">
+    <h3>🟢 课程进度为全量快照而非区间消耗 <span class="tag">设计取舍</span></h3>
+    <p>报告中的课程进度展示的是课程当前累计 used/total，而非「本区间内」消耗。符合本期 PRD 定义（课程进度快照），但月报/周报语义上用户可能期望「本期消耗」。如需，可后续基于 <code>course_consumptions.createdAt</code> 落区间统计，单独立项。</p>
+  </div>
+
+  <h2>💡 建议</h2>
+  <p style="font-size:13.5px;color:#5a4a4f;margin-bottom:8px;">分享等帧的更确定写法：</p>
+  <pre><code>// 替代 Future.delayed(60ms)
+await WidgetsBinding.instance.endOfFrame;
+final boundary = _captureKey.currentContext?.findRenderObject()
+    as RenderRepaintBoundary?;</code></pre>
+
+  <h2>📊 结论</h2>
+  <p style="font-size:14px;">本期改动结构清晰、口径严谨、平台隔离到位，Dart 静态分析 0 告警、单测全绿。问题集中在「长图超长内容捕获」这一点需真机回归，其余均为可选优化。iOS Widget 原生侧源码与配置齐备，按 <code>docs/ios-widget-setup.md</code> 在 Xcode 完成一次性 target 接入即可。<b>总体评分 8.8 / 10，可合入。</b></p>
+</div>
+</body>
+</html>

@@ -1,0 +1,53 @@
+{
+  "name": "add-schedule-button",
+  "leadAgentId": "359415df64244b1397f33a0d378f2c5a",
+  "workspacePath": "/Users/bozzguo/project/qq_glb",
+  "createdAt": "2026-04-27T08:10:05.122Z",
+  "options": {
+    "workspacePath": "/Users/bozzguo/project/qq_glb",
+    "isAutoTeam": false
+  },
+  "members": [
+    {
+      "memberId": "team-lead@add-schedule-button",
+      "name": "team-lead",
+      "role": "Team Lead - coordinates the team and interacts with the user"
+    },
+    {
+      "memberId": "pm-agent@add-schedule-button",
+      "name": "pm-agent",
+      "role": "PM项目协调"
+    },
+    {
+      "memberId": "requirement-agent@add-schedule-button",
+      "name": "requirement-agent",
+      "role": "需求分析Agent"
+    },
+    {
+      "memberId": "design-agent@add-schedule-button",
+      "name": "design-agent",
+      "role": "方案设计Agent"
+    },
+    {
+      "memberId": "gate-agent@add-schedule-button",
+      "name": "gate-agent",
+      "role": "闸门总控Agent"
+    },
+    {
+      "memberId": "dev-agent@add-schedule-button",
+      "name": "dev-agent",
+      "role": "开发实现Agent"
+    },
+    {
+      "memberId": "review-agent@add-schedule-button",
+      "name": "review-agent",
+      "role": "代码审查Agent"
+    },
+    {
+      "memberId": "test-agent@add-schedule-button",
+      "name": "test-agent",
+      "role": "测试验证Agent"
+    }
+  ],
+  "isAutoTeam": false
+}

@@ -1,7 +1,7 @@
 name: qianqian_growth_logbook
 description: "芊芊成长日志 - Qianqian's Growth Logbook"
 publish_to: 'none'
-version: 2.3.0+5
+version: 2.5.0+6
 
 environment:
   sdk: ^3.10.0
@@ -42,6 +42,9 @@ dependencies:
   
   # 分享功能
   share_plus: ^10.1.4
+
+  # iOS 桌面小组件桥接（P1-7）
+  home_widget: ^0.7.0
 
   # 文件选择（数据备份恢复）
   file_picker: ^8.1.6

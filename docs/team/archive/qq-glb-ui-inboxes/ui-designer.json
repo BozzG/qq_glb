@@ -1,0 +1,38 @@
+[
+  {
+    "id": "msg-1777019224197-tgm85l",
+    "from": "team-lead",
+    "to": "ui-designer",
+    "type": "message",
+    "content": "用户反馈：日程卡片的勾选按钮高度可以了，但不要圆形的设计。\n\n请重新设计勾选按钮，要求：\n1. 不要圆形，改用其他形状（如圆角方形、胶囊形等）\n2. 整体风格简洁、高端\n3. 保持粉色主色调\n4. 已创建 lib/widgets/elegant_check_button.dart 文件，可以在这里设计组件\n\n请提供设计方案并实现。",
+    "timestamp": "2026-04-24T08:27:04.197Z",
+    "read": true
+  },
+  {
+    "id": "msg-1777019292603-7ebf11",
+    "from": "developer",
+    "to": "ui-designer",
+    "type": "message",
+    "content": "已更新 `home_screen.dart` 中的 `ElegantCheckInButton` 调用方式：\n\n1. 移除了 `size` 参数（新组件已不需要）\n2. 按新组件签名调整参数顺序：`isChecked`, `scheduleColor`, `onTap`\n\n新设计（圆角胶囊形 + 方块图标 + \"打卡\"/\"已打卡\"文字标签）已应用。代码通过lint检查。",
+    "timestamp": "2026-04-24T08:28:12.603Z",
+    "read": true
+  },
+  {
+    "id": "msg-1777019598166-knj2yw",
+    "from": "team-lead",
+    "to": "ui-designer",
+    "type": "message",
+    "content": "方案收到！请确保实现文件与设计方案一致，并让developer完成集成到home_screen.dart。",
+    "timestamp": "2026-04-24T08:33:18.166Z",
+    "read": true
+  },
+  {
+    "id": "msg-1777019601352-qgtvm0",
+    "from": "developer",
+    "to": "ui-designer",
+    "type": "message",
+    "content": "已确认 `home_screen.dart` 中 `ElegantCheckInButton` 的调用方式与新组件签名一致，无需调整。\n\n新极简设计（36x36圆形 + 粉色深浅变化 + 微妙边框 + 200ms点击动画）已生效。",
+    "timestamp": "2026-04-24T08:33:21.352Z",
+    "read": true
+  }
+]

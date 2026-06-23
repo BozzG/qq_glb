@@ -1,0 +1,38 @@
+[
+  {
+    "id": "msg-1778662552525-ndaju7",
+    "from": "team-lead",
+    "to": "ux-agent",
+    "type": "message",
+    "content": "[Task #002] G2 - UI 状态校验清单\n目标：本次 case 不涉及新视觉/新组件，但需要由你出具一份\"已打卡/未打卡\"图标态的 UI 校验清单，作为 G3 review、G4 QA 阶段视觉一致性的依据。\n\n输入：\n  - 上游 PRD：/Users/bozzguo/project/qq_glb/docs/prd/checkin-status-fix.md（请先通读，重点看场景 1~5 与 AC-01~AC-06）\n  - 关键代码：\n    - /Users/bozzguo/project/qq_glb/lib/screens/home_screen.dart（_ScheduleCard 是打卡入口）\n    - /Users/bozzguo/project/qq_glb/lib/widgets/elegant_kit.dart（项目设计系统，主色/卡片/按钮规范）\n    - /Users/bozzguo/project/qq_glb/lib/screens/today_overview_screen.dart（也展示打卡态）\n    - /Users/bozzguo/project/qq_glb/lib/screens/schedule_detail_screen.dart（详情页打卡态）\n\n产出：/Users/bozzguo/project/qq_glb/docs/design/checkin-status-fix-ui-checklist.md\n\n闸门标准（章程 4.G2）必须包含：\n  - 涉及屏幕/组件清单（带文件路径）\n  - 关键状态枚举：至少包含\"未打卡 / 已打卡\"两态；如发现\"已过期未打卡 / 课程类已扣课时已打卡\"等隐含子态，一并列出\n  - 每个状态的视觉/交互定义：图标、颜色、文案、按钮可点击性、SnackBar 提示语\n  - 与 elegant_kit 现有组件/色板的复用关系（如使用了哪些 AppColors 字段、哪些公共组件）\n  - 边界场景：空态（当天无日程）、加载态（schedules 还在加载）、错误态（checkIn 写库失败）\n\n约束：\n  - 不出新设计，仅\"校验清单\"形式：列出\"现状 + 期望\"，每条清单以可观察的 UI 表现为准\n  - 不写技术方案、不指定具体颜色 RGB（除非代码中已明确定义）\n  - 篇幅控制在简洁实用范围\n  - 文件头部按章程 6 节命名规范：版本号、责任 agent、Task 编号(#002)、关联 PRD 链接（指向 docs/prd/checkin-status-fix.md）\n\n完成后用 send_message 回 main，按章程 5.2 样板回报，附文件绝对路径。\n\n截止：本轮内完成。",
+    "timestamp": "2026-05-13T08:55:52.525Z",
+    "read": true
+  },
+  {
+    "id": "msg-1778663222011-7er0dg",
+    "from": "team-lead",
+    "to": "ux-agent",
+    "type": "message",
+    "content": "## Task #002 评审结论：✅ 通过 G2 闸门\n\n清单质量优秀，对照章程第 4 节 G2 必备项逐项检查全部满足：\n\n**亮点**：\n1. 状态枚举层级化（S2 拆 S2a/S2b、S1 拆 S1b），覆盖了 PRD AC-03 跨天独立、AC-05 课时扣减\n2. VC-01~08 / IC-01~04 / BC-01~04 编号化 checklist，QA 可直接 1:1 落到测试用例（**这正是 G3/G4 最需要的**）\n3. 主动识别并登记文案语义债 D-01~D-03，与 PRD R1 形成闭环\n4. 严格遵循\"不出新设计\"原则，复用 AppElegant 现有字段\n\n**G3 阶段我会引用的关键判定项**：\n- VC-01（昨日已打卡卡片必须显示 S2 视觉）= 本次修复的核心目标，会 1:1 对照代码改动验证\n- VC-08（颜色仅来自 AppElegant）= code review 硬性检查项\n- IC-01（SnackBar 文案\"这条日程已经打过卡啦\"）= 已对照代码现状一致\n\n**已知文案语义债处理决策（PM 拍板）**：\n- D-01/D-02/D-03 本期不修，黄灯登记\n- 由我（PM）在 G3 review 记录中正式归档，下次迭代由 product-agent 起新 PRD\n- 不阻塞本次 G3/G4 推进\n\n**请进入待命状态**，等待下一次派单。本次首个 case 后续阶段（G3 review、G4 QA）由我和 dev/qa 推进，无需你介入。\n\n— main (PM)",
+    "timestamp": "2026-05-13T09:07:02.011Z",
+    "read": true
+  },
+  {
+    "id": "msg-1778745897753-w3t2wn",
+    "from": "team-lead",
+    "to": "ux-agent",
+    "type": "message",
+    "content": "[Task #004] 收闸通报\n- G4 已通过 ✅，UI 清单作为归档基线之一纳入\n- D-01/D-02/D-03 三项黄灯由 product-agent 在下一轮 PRD 中统一收口，届时会向你派发对齐的 G2 任务\n- 暂无新派单，继续待命",
+    "timestamp": "2026-05-14T08:04:57.753Z",
+    "read": true
+  },
+  {
+    "id": "shutdown-1778746440503",
+    "from": "team-lead",
+    "to": "ux-agent",
+    "type": "shutdown_request",
+    "content": "{\"type\":\"shutdown_request\",\"request_id\":\"shutdown-1778746440503\",\"reason\":\"首个 case 已 G4 通过并归档，团队磨合 DoD 完成。请确认 shutdown。\",\"from\":\"team-lead\",\"timestamp\":\"2026-05-14T08:14:00.503Z\"}",
+    "timestamp": "2026-05-14T08:14:00.503Z",
+    "read": true
+  }
+]

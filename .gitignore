@@ -1,0 +1,10 @@
+
+# 构建产物与工具缓存
+/build/
+ios/build/
+.dart_tool/
+.codebuddy/
+coverage/
+.flutter-plugins-dependencies
+docs/cache/
+docs/doctags/

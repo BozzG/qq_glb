@@ -6,6 +6,7 @@ import '../providers/schedule_provider.dart';
 import '../models/models.dart';
 import '../utils/app_theme.dart';
 import '../widgets/elegant_kit.dart';
+import 'growth_report_screen.dart';
 
 class CheckInStatsScreen extends StatefulWidget {
   const CheckInStatsScreen({super.key});
@@ -33,7 +34,20 @@ class _CheckInStatsScreenState extends State<CheckInStatsScreen> {
     return ElegantScaffold(
       body: Column(
         children: [
-          const ElegantNavBar(title: '打卡统计'),
+          ElegantNavBar(
+            title: '打卡统计',
+            actions: [
+              ElegantCircleIconButton(
+                icon: Icons.insights_rounded,
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const GrowthReportScreen(),
+                  ),
+                ),
+              ),
+            ],
+          ),
           Expanded(
             child: Consumer<ScheduleProvider>(
               builder: (ctx, provider, _) {

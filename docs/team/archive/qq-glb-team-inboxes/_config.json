@@ -1,0 +1,18 @@
+{
+  "name": "qq-glb-team",
+  "leadAgentId": "89000db7c077429c8b1c7efe62a5b209",
+  "workspacePath": "/Users/bozzguo/project/qq_glb",
+  "createdAt": "2026-05-13T08:42:49.502Z",
+  "options": {
+    "workspacePath": "/Users/bozzguo/project/qq_glb",
+    "isAutoTeam": false
+  },
+  "members": [
+    {
+      "memberId": "team-lead@qq-glb-team",
+      "name": "team-lead",
+      "role": "Team Lead - coordinates the team and interacts with the user"
+    }
+  ],
+  "isAutoTeam": false
+}
