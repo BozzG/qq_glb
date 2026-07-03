@@ -1,7 +1,7 @@
 name: qianqian_growth_logbook
 description: "芊芊成长日志 - Qianqian's Growth Logbook"
 publish_to: 'none'
-version: 2.5.0+6
+version: 2.6.0+7
 
 environment:
   sdk: ^3.10.0

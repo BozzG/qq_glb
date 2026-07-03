@@ -9,13 +9,7 @@ import '../utils/app_theme.dart';
 import '../widgets/elegant_kit.dart';
 import '../widgets/elegant_check_button.dart';
 import 'schedule_detail_screen.dart';
-import 'add_schedule_screen.dart';
-import 'check_in_stats_screen.dart';
-import 'course_list_screen.dart';
-import 'medical_records_screen.dart';
-import 'diary_screen.dart';
 import 'settings_screen.dart';
-import 'today_overview_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -46,17 +40,31 @@ class _HomeScreenState extends State<HomeScreen> {
         builder: (context, provider, _) {
           final day = _selectedDay ?? DateTime.now();
           final daySchedules = provider.getSchedulesForDay(day);
-          // 顶栏问候区始终展示"今天"的日程数，不随日历选中变化
-          final todayCount =
-              provider.getSchedulesForDay(DateTime.now()).length;
+          // 顶栏问候区与今日焦点卡始终基于"今天"，不随日历选中变化
+          final todayList = provider.getSchedulesForDay(DateTime.now());
+          final todayCount = todayList.length;
           return SafeArea(
             bottom: false,
             child: CustomScrollView(
               physics: const BouncingScrollPhysics(),
               slivers: [
                 // ─ 顶栏（问候 + 设置按钮）─
+                SliverToBoxAdapter(child: _buildTopBar(todayCount)),
+                // ─ 今日焦点卡 (P1-2) ─
                 SliverToBoxAdapter(
-                  child: _buildTopBar(todayCount),
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 4, 20, 4),
+                    child: _TodayFocusCard(
+                      todaySchedules: todayList,
+                      isCheckedIn: provider.isCheckedIn,
+                      onTapSchedule: (s) => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => ScheduleDetailScreen(schedule: s),
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
                 // ─ 日历卡片 ─
                 SliverToBoxAdapter(
@@ -158,7 +166,6 @@ class _HomeScreenState extends State<HomeScreen> {
           );
         },
       ),
-      bottomNavigationBar: _buildBottomNav(),
     );
   }
 
@@ -223,269 +230,148 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ─── 日历 ───────────────────────────────────────────
+  // ─── 日历（含周/月切换 + 打卡热力 P1-3）──────────────
   Widget _buildCalendar(ScheduleProvider provider) {
-    return ElegantCard(
-      padding: const EdgeInsets.fromLTRB(6, 4, 6, 6),
-      child: TableCalendar(
-        locale: 'zh_CN',
-        firstDay: DateTime(2024, 1, 1),
-        lastDay: DateTime(2030, 12, 31),
-        focusedDay: _focusedDay,
-        calendarFormat: _calendarFormat,
-        selectedDayPredicate: (d) => isSameDay(d, _selectedDay),
-        onDaySelected: (selected, focused) {
-          HapticFeedback.selectionClick();
-          setState(() {
-            _selectedDay = selected;
-            _focusedDay = focused;
-          });
-        },
-        onFormatChanged: (fmt) => setState(() => _calendarFormat = fmt),
-        onPageChanged: (focused) => _focusedDay = focused,
-        rowHeight: 38,
-        daysOfWeekHeight: 26,
-        calendarStyle: CalendarStyle(
-          outsideDaysVisible: false,
-          todayDecoration: BoxDecoration(
-            color: AppElegant.bgAlt,
-            shape: BoxShape.circle,
-            border: Border.all(color: AppElegant.hair, width: 0.5),
-          ),
-          todayTextStyle: const TextStyle(
-            color: AppElegant.ink,
-            fontWeight: FontWeight.w600,
-          ),
-          selectedDecoration: const BoxDecoration(
-            color: AppElegant.accent,
-            shape: BoxShape.circle,
-          ),
-          selectedTextStyle: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w600,
-          ),
-          defaultTextStyle: const TextStyle(
-            color: AppElegant.ink,
-            fontSize: 13,
-          ),
-          weekendTextStyle: const TextStyle(
-            color: AppElegant.inkSoft,
-            fontSize: 13,
-          ),
-          markerDecoration: const BoxDecoration(
-            color: AppElegant.accent,
-            shape: BoxShape.circle,
-          ),
-          markersMaxCount: 3,
-          markerSize: 4,
-          markerMargin: const EdgeInsets.symmetric(horizontal: 1.2),
-          markersAlignment: Alignment.bottomCenter,
-        ),
-        daysOfWeekStyle: const DaysOfWeekStyle(
-          weekdayStyle: TextStyle(
-            fontSize: 11,
-            color: AppElegant.inkSoft,
-            fontWeight: FontWeight.w500,
-            letterSpacing: 1,
-          ),
-          weekendStyle: TextStyle(
-            fontSize: 11,
-            color: AppElegant.inkFaint,
-            fontWeight: FontWeight.w500,
-            letterSpacing: 1,
-          ),
-        ),
-        headerStyle: const HeaderStyle(
-          formatButtonVisible: false,
-          titleCentered: true,
-          leftChevronIcon: Icon(
-            Icons.chevron_left,
-            size: 20,
-            color: AppElegant.ink,
-          ),
-          rightChevronIcon: Icon(
-            Icons.chevron_right,
-            size: 20,
-            color: AppElegant.ink,
-          ),
-          titleTextStyle: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: AppElegant.ink,
-            letterSpacing: 1.5,
-          ),
-          headerPadding: EdgeInsets.symmetric(vertical: 8),
-        ),
-        eventLoader: (d) => provider.getSchedulesForDay(d),
-      ),
-    );
-  }
-
-  // ─── 底部导航（7 格：首页/今日/统计/[+]/课时/健康/日记）──
-  Widget _buildBottomNav() {
-    return Container(
-      decoration: const BoxDecoration(
-        color: AppElegant.card,
-        border: Border(top: BorderSide(color: AppElegant.hair, width: 0.5)),
-      ),
-      child: SafeArea(
-        top: false,
-        child: SizedBox(
-          height: 80,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(bottom: 8, right: 2),
           child: Row(
             children: [
-              _NavItem(
-                icon: Icons.home_outlined,
-                selectedIcon: Icons.home_rounded,
-                label: '首页',
-                isSelected: true,
-                onTap: () {},
-              ),
-              _NavItem(
-                icon: Icons.today_outlined,
-                selectedIcon: Icons.today_rounded,
-                label: '今日',
-                isSelected: false,
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const TodayOverviewScreen(),
-                  ),
-                ),
-              ),
-              _NavItem(
-                icon: Icons.insights_outlined,
-                selectedIcon: Icons.insights_rounded,
-                label: '统计',
-                isSelected: false,
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const CheckInStatsScreen()),
-                ),
-              ),
-              // 中间浮起的添加按钮
-              SizedBox(
-                width: 60,
-                child: Center(
-                  child: GestureDetector(
-                    onTap: () {
-                      HapticFeedback.mediumImpact();
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const AddScheduleScreen(),
-                        ),
-                      );
-                    },
-                    child: Container(
-                      width: 50,
-                      height: 50,
-                      decoration: BoxDecoration(
-                        color: AppElegant.accent,
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppElegant.accent.withValues(alpha: 0.28),
-                            blurRadius: 14,
-                            offset: const Offset(0, 6),
-                          ),
-                        ],
-                      ),
-                      child: const Icon(
-                        Icons.add_rounded,
-                        color: Colors.white,
-                        size: 24,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              _NavItem(
-                icon: Icons.menu_book_outlined,
-                selectedIcon: Icons.menu_book_rounded,
-                label: '课时',
-                isSelected: false,
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const CourseListScreen()),
-                ),
-              ),
-              _NavItem(
-                icon: Icons.medical_services_outlined,
-                selectedIcon: Icons.medical_services_rounded,
-                label: '健康',
-                isSelected: false,
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const MedicalRecordsScreen(),
-                  ),
-                ),
-              ),
-              _NavItem(
-                icon: Icons.edit_outlined,
-                selectedIcon: Icons.edit_rounded,
-                label: '日记',
-                isSelected: false,
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const DiaryScreen()),
-                ),
+              const Spacer(),
+              _FormatToggle(
+                format: _calendarFormat,
+                onChanged: (f) => setState(() => _calendarFormat = f),
               ),
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-// ═══════════════════════════════════════════════════════════════
-
-class _NavItem extends StatelessWidget {
-  final IconData icon;
-  final IconData selectedIcon;
-  final String label;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  const _NavItem({
-    required this.icon,
-    required this.selectedIcon,
-    required this.label,
-    required this.isSelected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        behavior: HitTestBehavior.opaque,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              isSelected ? selectedIcon : icon,
-              size: 22,
-              color: isSelected ? AppElegant.accent : AppElegant.inkFaint,
+        ElegantCard(
+          padding: const EdgeInsets.fromLTRB(6, 4, 6, 6),
+          child: TableCalendar(
+            locale: 'zh_CN',
+            firstDay: DateTime(2024, 1, 1),
+            lastDay: DateTime(2030, 12, 31),
+            focusedDay: _focusedDay,
+            calendarFormat: _calendarFormat,
+            selectedDayPredicate: (d) => isSameDay(d, _selectedDay),
+            onDaySelected: (selected, focused) {
+              HapticFeedback.selectionClick();
+              setState(() {
+                _selectedDay = selected;
+                _focusedDay = focused;
+              });
+            },
+            onFormatChanged: (fmt) => setState(() => _calendarFormat = fmt),
+            onPageChanged: (focused) => _focusedDay = focused,
+            rowHeight: 38,
+            daysOfWeekHeight: 26,
+            calendarStyle: CalendarStyle(
+              outsideDaysVisible: false,
+              todayDecoration: BoxDecoration(
+                color: AppElegant.bgAlt,
+                shape: BoxShape.circle,
+                border: Border.all(color: AppElegant.hair, width: 0.5),
+              ),
+              todayTextStyle: const TextStyle(
+                color: AppElegant.ink,
+                fontWeight: FontWeight.w600,
+              ),
+              selectedDecoration: const BoxDecoration(
+                color: AppElegant.accent,
+                shape: BoxShape.circle,
+              ),
+              selectedTextStyle: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+              ),
+              defaultTextStyle: const TextStyle(
+                color: AppElegant.ink,
+                fontSize: 13,
+              ),
+              weekendTextStyle: const TextStyle(
+                color: AppElegant.inkSoft,
+                fontSize: 13,
+              ),
+              markerDecoration: const BoxDecoration(
+                color: AppElegant.accent,
+                shape: BoxShape.circle,
+              ),
+              markersMaxCount: 3,
+              markerSize: 4,
+              markerMargin: const EdgeInsets.symmetric(horizontal: 1.2),
+              markersAlignment: Alignment.bottomCenter,
             ),
-            const SizedBox(height: 3),
-            Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 10,
-                color: isSelected ? AppElegant.accent : AppElegant.inkFaint,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                letterSpacing: 0.3,
+            daysOfWeekStyle: const DaysOfWeekStyle(
+              weekdayStyle: TextStyle(
+                fontSize: 11,
+                color: AppElegant.inkSoft,
+                fontWeight: FontWeight.w500,
+                letterSpacing: 1,
+              ),
+              weekendStyle: TextStyle(
+                fontSize: 11,
+                color: AppElegant.inkFaint,
+                fontWeight: FontWeight.w500,
+                letterSpacing: 1,
               ),
             ),
-          ],
+            headerStyle: const HeaderStyle(
+              formatButtonVisible: false,
+              titleCentered: true,
+              leftChevronIcon: Icon(
+                Icons.chevron_left,
+                size: 20,
+                color: AppElegant.ink,
+              ),
+              rightChevronIcon: Icon(
+                Icons.chevron_right,
+                size: 20,
+                color: AppElegant.ink,
+              ),
+              titleTextStyle: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: AppElegant.ink,
+                letterSpacing: 1.5,
+              ),
+              headerPadding: EdgeInsets.symmetric(vertical: 8),
+            ),
+            calendarBuilders: CalendarBuilders(
+              markerBuilder: (context, day, events) {
+                if (events.isEmpty) return null;
+                final list = events.cast<Schedule>();
+                final done = list
+                    .where((s) => provider.isCheckedIn(s.id))
+                    .length;
+                final ratio = list.isEmpty ? 0.0 : done / list.length;
+                // 颜色按打卡完成度：浅粉(未打卡) → 深玫瑰粉(全打卡)
+                final color = Color.lerp(
+                  AppElegant.accentLight,
+                  AppElegant.accent,
+                  ratio,
+                )!;
+                // 宽度按日程密度：8 ~ 18
+                final w = 8.0 + list.length.clamp(1, 5) * 2.0;
+                return Align(
+                  alignment: Alignment.bottomCenter,
+                  child: Container(
+                    margin: const EdgeInsets.only(bottom: 5),
+                    width: w,
+                    height: 3,
+                    decoration: BoxDecoration(
+                      color: color,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                );
+              },
+            ),
+            eventLoader: (d) => provider.getSchedulesForDay(d),
+          ),
         ),
-      ),
+      ],
     );
   }
 }
@@ -642,4 +528,276 @@ class _ScheduleCard extends StatelessWidget {
         'general': '通用',
       }[t.name] ??
       '通用';
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  今日焦点卡 (P1-2)：完成进度环 + 下一件待办
+//  数据基于"今天"，不随日历选中日变化。
+// ═══════════════════════════════════════════════════════════════
+class _TodayFocusCard extends StatelessWidget {
+  final List<Schedule> todaySchedules;
+  final bool Function(String id) isCheckedIn;
+  final void Function(Schedule schedule) onTapSchedule;
+
+  const _TodayFocusCard({
+    required this.todaySchedules,
+    required this.isCheckedIn,
+    required this.onTapSchedule,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final total = todaySchedules.length;
+    final done = todaySchedules.where((s) => isCheckedIn(s.id)).length;
+
+    // 今日无安排
+    if (total == 0) {
+      return ElegantCard(
+        child: Row(
+          children: [
+            _Ring(done: 0, total: 0),
+            const SizedBox(width: 16),
+            const Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('今日焦点', style: AppText.meta),
+                  SizedBox(height: 6),
+                  Text(
+                    '今天没有安排，好好休息～',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: AppElegant.ink,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final allDone = done == total;
+
+    // 下一件待办：未打卡中 dateTime >= now 的最早；否则最早的未打卡
+    final now = DateTime.now();
+    final pending = todaySchedules.where((s) => !isCheckedIn(s.id)).toList()
+      ..sort((a, b) => a.dateTime.compareTo(b.dateTime));
+    Schedule? next;
+    for (final s in pending) {
+      if (!s.dateTime.isBefore(now)) {
+        next = s;
+        break;
+      }
+    }
+    next ??= pending.isNotEmpty ? pending.first : null;
+
+    return ElegantCard(
+      onTap: (allDone || next == null) ? null : () => onTapSchedule(next!),
+      child: Row(
+        children: [
+          _Ring(done: done, total: total),
+          const SizedBox(width: 16),
+          Expanded(
+            child: (allDone || next == null)
+                ? const Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text('今日焦点', style: AppText.meta),
+                      SizedBox(height: 6),
+                      Text(
+                        '今天全部打卡完成 🎉',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: AppElegant.ink,
+                        ),
+                      ),
+                      SizedBox(height: 2),
+                      Text('坚持得很棒', style: AppText.meta),
+                    ],
+                  )
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Row(
+                        children: [
+                          const Text('下一件', style: AppText.meta),
+                          const SizedBox(width: 6),
+                          Text(
+                            DateFormat('HH:mm').format(next.dateTime),
+                            style: const TextStyle(
+                              fontSize: 11,
+                              color: AppElegant.accent,
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: 0.3,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          Container(
+                            width: 3,
+                            height: 16,
+                            decoration: BoxDecoration(
+                              color: next.color,
+                              borderRadius: BorderRadius.circular(2),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              next.title,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                                color: AppElegant.ink,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+          ),
+          if (!allDone && next != null)
+            const Icon(
+              Icons.chevron_right,
+              size: 18,
+              color: AppElegant.inkWhisper,
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// 完成进度环：灰底环 + 玫瑰粉进度弧 + 中心 "done/total"
+class _Ring extends StatelessWidget {
+  final int done;
+  final int total;
+  const _Ring({required this.done, required this.total});
+
+  @override
+  Widget build(BuildContext context) {
+    final pct = total == 0 ? 0.0 : done / total;
+    return SizedBox(
+      width: 54,
+      height: 54,
+      child: CustomPaint(
+        painter: _RingPainter(progress: pct),
+        child: Center(
+          child: Text(
+            total == 0 ? '—' : '$done/$total',
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: AppElegant.ink,
+              height: 1,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _RingPainter extends CustomPainter {
+  final double progress;
+  _RingPainter({required this.progress});
+
+  static const double _twoPi = 6.283185307179586;
+  static const double _halfPi = 1.5707963267948966;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = (size.width - 5) / 2;
+    final bg = Paint()
+      ..color = AppElegant.hair
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 5
+      ..strokeCap = StrokeCap.round;
+    canvas.drawCircle(center, radius, bg);
+    if (progress > 0) {
+      final fg = Paint()
+        ..color = AppElegant.accent
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 5
+        ..strokeCap = StrokeCap.round;
+      canvas.drawArc(
+        Rect.fromCircle(center: center, radius: radius),
+        -_halfPi,
+        _twoPi * progress.clamp(0.0, 1.0),
+        false,
+        fg,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_RingPainter oldDelegate) =>
+      oldDelegate.progress != progress;
+}
+
+/// 周/月视图切换（P1-3）：胶囊分段，选中态白底微阴影
+class _FormatToggle extends StatelessWidget {
+  final CalendarFormat format;
+  final ValueChanged<CalendarFormat> onChanged;
+  const _FormatToggle({required this.format, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(3),
+      decoration: BoxDecoration(
+        color: AppElegant.bgAlt,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: AppElegant.hair, width: 0.5),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _seg('月', CalendarFormat.month),
+          _seg('周', CalendarFormat.week),
+        ],
+      ),
+    );
+  }
+
+  Widget _seg(String label, CalendarFormat f) {
+    final selected = format == f;
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.selectionClick();
+        onChanged(f);
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
+        decoration: BoxDecoration(
+          color: selected ? AppElegant.card : Colors.transparent,
+          borderRadius: BorderRadius.circular(8),
+          boxShadow: selected ? AppElegant.softShadow : null,
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+            color: selected ? AppElegant.accent : AppElegant.inkSoft,
+          ),
+        ),
+      ),
+    );
+  }
 }
